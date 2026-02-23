@@ -4,24 +4,28 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
+        android:background="@color/mg_surface"
         android:orientation="vertical">
     <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/colorPrimary"
+            android:background="@color/mg_top_bar_bg"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
             app:title="@string/settings"/>
 
     <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="match_parent"
+            android:fillViewport="true">
         <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
-            <androidx.cardview.widget.CardView style="@style/OptionGroup">
+            <androidx.cardview.widget.CardView
+                    android:id="@+id/settingsGeneralGroup"
+                    style="@style/OptionGroup">
                 <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -33,13 +37,16 @@
                             android:text="@string/pref_heading_general"
                             android:textSize="16sp"/>
                     <View
+                            android:id="@+id/themeDivider"
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
                             android:background="@color/dividerColor"/>
                     <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/themeRow"
                             style="@style/OptionRow"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content">
+                            android:layout_height="wrap_content"
+                            android:visibility="visible">
                         <TextView
                                 android:id="@+id/profile_change_nickname"
                                 style="@style/OptionItemText"
@@ -62,6 +69,64 @@
                             android:layout_height="1dp"
                             android:background="@color/dividerColor"/>
                     <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/appLockRow"
+                            style="@style/OptionRow"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+                        <TextView
+                                style="@style/OptionItemText"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:text="@string/pref_heading_app_lock"
+                                app:layout_constraintEnd_toStartOf="@id/setting_app_lock"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent"/>
+                        <Spinner
+                                android:id="@+id/setting_app_lock"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="parent"/>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                    <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="@color/dividerColor"/>
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/appPasswordRow"
+                            style="@style/OptionRow"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:visibility="gone">
+                        <TextView
+                                style="@style/OptionItemText"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:text="@string/pref_app_password"
+                                app:layout_constraintEnd_toStartOf="@id/setting_app_password"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent"/>
+                        <Button
+                                android:id="@+id/setting_app_password"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/pref_set_app_password"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="parent"/>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                    <View
+                            android:id="@+id/appPasswordDivider"
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="@color/dividerColor"
+                            android:visibility="gone"/>
+                    <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="@color/dividerColor"/>
+                    <androidx.constraintlayout.widget.ConstraintLayout
                             style="@style/OptionRow"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content">
@@ -75,6 +140,7 @@
                                 app:layout_constraintTop_toTopOf="parent"/>
                         <androidx.appcompat.widget.SwitchCompat
                                 android:id="@+id/setting_run_at_startup"
+                                style="@style/SettingsSwitch"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginHorizontal="8dp"
@@ -100,6 +166,7 @@
                                 app:layout_constraintTop_toTopOf="parent"/>
                         <androidx.appcompat.widget.SwitchCompat
                                 android:id="@+id/setting_auto_away_enabled"
+                                style="@style/SettingsSwitch"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginHorizontal="8dp"
@@ -164,6 +231,7 @@
                                 app:layout_constraintTop_toTopOf="parent"/>
                         <androidx.appcompat.widget.SwitchCompat
                                 android:id="@+id/setting_confirm_quitting"
+                                style="@style/SettingsSwitch"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginHorizontal="8dp"
@@ -189,6 +257,7 @@
                             app:layout_constraintTop_toTopOf="parent"/>
                         <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/setting_confirm_calling"
+                            style="@style/SettingsSwitch"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginHorizontal="8dp"
@@ -196,10 +265,40 @@
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="parent"/>
                     </androidx.constraintlayout.widget.ConstraintLayout>
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/dividerColor"/>
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/advancedToggleRow"
+                        style="@style/OptionRow"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <TextView
+                            android:id="@+id/advancedToggleText"
+                            style="@style/OptionItemText"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:text="@string/show_advanced"
+                            app:layout_constraintEnd_toStartOf="@id/advancedChevron"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"/>
+                        <ImageView
+                            android:id="@+id/advancedChevron"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_chevron_right"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <androidx.cardview.widget.CardView style="@style/OptionGroup">
+            <androidx.cardview.widget.CardView
+                    android:id="@+id/settingsNetworkGroup"
+                    style="@style/OptionGroup"
+                    android:visibility="gone">
                 <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -228,6 +327,7 @@
                                 app:layout_constraintTop_toTopOf="parent"/>
                         <androidx.appcompat.widget.SwitchCompat
                                 android:id="@+id/settings_udp_enabled"
+                                style="@style/SettingsSwitch"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginHorizontal="8dp"
@@ -238,7 +338,10 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <androidx.cardview.widget.CardView style="@style/OptionGroup">
+            <androidx.cardview.widget.CardView
+                    android:id="@+id/settingsProxyGroup"
+                    style="@style/OptionGroup"
+                    android:visibility="gone">
                 <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -346,7 +449,10 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <androidx.cardview.widget.CardView style="@style/OptionGroup">
+            <androidx.cardview.widget.CardView
+                    android:id="@+id/settingsPasswordGroup"
+                    style="@style/OptionGroup"
+                    android:visibility="gone">
                 <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -462,7 +568,10 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <androidx.cardview.widget.CardView style="@style/OptionGroup">
+            <androidx.cardview.widget.CardView
+                    android:id="@+id/settingsAdvancedGroup"
+                    style="@style/OptionGroup"
+                    android:visibility="gone">
                 <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -573,6 +682,7 @@
                                 app:layout_constraintTop_toTopOf="parent"/>
                         <androidx.appcompat.widget.SwitchCompat
                                 android:id="@+id/setting_disable_screenshots"
+                                style="@style/SettingsSwitch"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginHorizontal="8dp"

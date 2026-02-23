@@ -3,7 +3,8 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="@color/mg_chat_surface">
 
     <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appBarLayout"
@@ -17,9 +18,10 @@
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                android:background="@color/colorPrimary"
+                android:background="@color/mg_top_bar_bg"
                 android:elevation="16dp"
                 android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+                app:popupTheme="@style/AppTheme.PopupOverlay"
                 app:navigationIcon="?attr/homeAsUpIndicator">
 
             <RelativeLayout
@@ -31,7 +33,7 @@
                     android:focusable="true"
                     android:background="?android:attr/selectableItemBackground">
 
-                <ltd.evilcorp.atox.ui.AvatarImageView
+                <com.dismal.btox.ui.AvatarImageView
                         android:id="@+id/avatarImageView"
                         android:layout_height="38dp"
                         android:layout_width="38dp"
@@ -78,9 +80,11 @@
     <ListView android:id="@+id/messages"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginHorizontal="8dp"
+            android:layout_marginHorizontal="6dp"
+            android:layout_marginTop="4dp"
             android:divider="@drawable/message_divider"
             android:dividerHeight="2dp"
+            android:fastScrollEnabled="true"
             android:stackFromBottom="true"
             android:transcriptMode="normal"
             app:layout_constraintBottom_toTopOf="@+id/bottomBar"
@@ -88,40 +92,85 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/appBarLayout"/>
 
+    <com.android.messaging.ui.ListEmptyView
+            android:id="@+id/noMessagesView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:orientation="vertical"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@+id/bottomBar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/appBarLayout">
+
+        <ImageView
+                android:id="@+id/empty_image_hint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no" />
+
+        <TextView
+                android:id="@+id/empty_text_hint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginLeft="60dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginRight="60dp"
+                android:gravity="center_horizontal"
+                android:textColor="@color/mg_text_muted"
+                android:textSize="14sp" />
+    </com.android.messaging.ui.ListEmptyView>
+
     <LinearLayout android:id="@+id/bottomBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="8dp"
+            android:layout_marginHorizontal="6dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            android:background="@color/mg_chat_surface"
+            android:gravity="center_vertical"
             android:orientation="horizontal"
             app:layout_constraintBottom_toBottomOf="parent">
+
+        <ImageButton android:id="@+id/attach"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="6dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/attach_file"
+                android:padding="8dp"
+                android:src="@drawable/ic_attachment_dark"
+                android:tint="@color/mg_icon_tint"/>
+
         <EditText android:id="@+id/outgoingMessage"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:background="@drawable/msg_bubble_input"
                 android:hint="@string/message"
                 android:importantForAutofill="no"
                 android:inputType="textMultiLine|textCapSentences"
+                android:maxLines="6"
                 android:maxHeight="256dp"
+                android:minHeight="40dp"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="8dp"
+                android:textColor="@color/mg_text_primary"
+                android:textColorHint="@color/mg_text_hint"
                 tools:targetApi="26"/>
 
         <ImageButton android:id="@+id/send"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="0"
-                android:background="@android:color/transparent"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/send_arrow_background"
                 android:contentDescription="@string/send"
-                android:paddingHorizontal="4dp"
-                android:src="@drawable/ic_send"
-                android:visibility="gone"
-                app:tint="@color/colorPrimary"/>
-
-        <ImageButton android:id="@+id/attach"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="0"
-                android:background="@android:color/transparent"
-                android:contentDescription="@string/attach_file"
-                android:paddingHorizontal="4dp"
-                android:src="@drawable/ic_attach_file"/>
+                android:padding="8dp"
+                android:src="@drawable/ic_send_light"
+                android:visibility="gone"/>
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

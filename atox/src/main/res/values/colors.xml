@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimaryLight">#1976D2</color>
-    <color name="colorPrimary">#1565C0</color>
-    <color name="colorPrimaryDark">#0D47A1</color>
-    <color name="colorAccent">#D81B60</color>
+    <color name="colorPrimaryLight">#66BB6A</color>
+    <color name="colorPrimary">#4CAF50</color>
+    <color name="colorPrimaryDark">#388E3C</color>
+    <color name="colorAccent">#4CAF50</color>
     <color name="colorGray">#555</color>
 
     <color name="statusOffline">@color/colorGray</color>
@@ -32,4 +32,15 @@
         <item>#2093cd</item>
         <item>#ad62a7</item>
     </array>
+
+    <color name="mg_surface">#FFF5F5F5</color>
+    <color name="mg_chat_surface">#FFE5E5E5</color>
+    <color name="mg_text_primary">#FF212121</color>
+    <color name="mg_text_secondary">#FF616161</color>
+    <color name="mg_text_muted">#FF6D6D6D</color>
+    <color name="mg_text_hint">#99000000</color>
+    <color name="mg_input_background">#FFFFFFFF</color>
+    <color name="mg_divider_on_primary">#66FFFFFF</color>
+    <color name="mg_icon_tint">#FF666666</color>
+    <color name="mg_timestamp_text">#80000000</color>
 </resources>

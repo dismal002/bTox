@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="fab_color">#FF5EAA3D</color>
+    <color name="fab_pressed_color">#FF4A8E2F</color>
+    <color name="fab_ripple">#335EAA3D</color>
+
+    <dimen name="fab_size">56dp</dimen>
+    <dimen name="fab_padding_bottom">0dp</dimen>
+    <dimen name="fab_elevation">4dp</dimen>
+    <dimen name="fab_bottom_margin">16dp</dimen>
+    <dimen name="fab_left_right_margin">16dp</dimen>
+
+    <string name="start_new_conversation">Start new conversation</string>
+    <string name="conversation_list_title">Messaging</string>
+    <string name="conversation_list_empty_text">Once you start a new conversation, you will see it listed here</string>
+    <string name="chat_empty_text">No messages yet</string>
+</resources>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Minimal styles to satisfy layout references -->
+    <style name="ComposeMessageViewDraftViewStyle" />
+    <style name="SubjectViewStyle" />
+    <style name="ConversationComposeSubjectText" parent="TextAppearance.AppCompat.Body1" />
+    <style name="AttachmentPreviewCloseButtonStyle" />
+    <style name="ComposeMessageViewAttachMediaButtonStyle" />
+    <style name="ConversationComposeSendText" parent="TextAppearance.AppCompat.Body1" />
+    <style name="ComposeMessageViewFrameLayoutStyle" />
+    <style name="ComposeMessageViewMessageBodySizeStyle" parent="TextAppearance.AppCompat.Caption" />
+    <style name="ConversationMessageViewStyle" />
+    <style name="ConversationMessageTitle" parent="TextAppearance.AppCompat.Body1" />
+    <style name="ConversationMessageInfo" parent="TextAppearance.AppCompat.Caption" />
+    <style name="ConversationMessage" parent="TextAppearance.AppCompat.Body1" />
+    <style name="ConversationMessageStatus" parent="TextAppearance.AppCompat.Caption" />
+    <style name="MessageSimIndicator" parent="TextAppearance.AppCompat.Caption" />
+    <style name="SmsDeliverdBadge" />
+    <style name="MmsIndicatorStyle" parent="TextAppearance.AppCompat.Caption">
+        <item name="android:textColor">#757575</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+</resources>

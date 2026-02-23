@@ -10,4 +10,11 @@
     <dimen name="contact_avatar_placeholder_text">28dp</dimen>
 
     <dimen name="default_avatar_size">50dp</dimen>
+
+    <dimen name="profile_header_name_size">24sp</dimen>
+    <dimen name="profile_header_name_margin_horizontal">16dp</dimen>
+    <dimen name="profile_header_name_margin_bottom">56dp</dimen>
+    <dimen name="profile_header_name_elevation">8dp</dimen>
+    <dimen name="profile_header_name_lift">24dp</dimen>
+
 </resources>

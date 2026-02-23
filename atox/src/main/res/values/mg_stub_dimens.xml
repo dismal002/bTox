@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="compose_message_subject_top_padding">4dp</dimen>
+    <dimen name="compose_message_subject_bottom_padding">4dp</dimen>
+    <dimen name="compose_message_subject_cancel_top_offset">0dp</dimen>
+    <dimen name="compose_message_attachment_padding_topBottom">8dp</dimen>
+    <dimen name="action_bar_height">56dp</dimen>
+    <dimen name="conversation_message_contact_icon_size">40dp</dimen>
+    <dimen name="conversation_message_photo_min_size">72dp</dimen>
+    <dimen name="attachment_rounded_corner_radius">4dp</dimen>
+    <dimen name="fastscroll_preview_padding">8dp</dimen>
+    <dimen name="fastscroll_preview_text_size">14sp</dimen>
+</resources>

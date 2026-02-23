@@ -1,67 +1,96 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/mg_top_bar_bg"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/profileCreationLabel"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-    <androidx.appcompat.widget.Toolbar android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/colorPrimary"
-            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:title="@string/app_name"/>
-    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/content"
-            android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:paddingLeft="40dp"
+        android:paddingRight="40dp"
+        android:paddingTop="80dp"
+        android:text="@string/create_profile_onboarding_title"
+        android:textColor="@android:color/white"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/importLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:paddingLeft="40dp"
+        android:paddingRight="40dp"
+        android:paddingTop="12dp"
+        android:text="@string/create_profile_onboarding_subtitle"
+        android:textColor="@android:color/white"
+        android:textSize="16sp" />
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:importantForAccessibility="no"
+        android:paddingTop="24dp"
+        android:src="@drawable/permissions" />
+
+    <EditText
+        android:id="@+id/username"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginBottom="12dp"
+        android:autofillHints="username"
+        android:background="@color/mg_input_background"
+        android:hint="@string/name"
+        android:inputType="text"
+        android:maxLength="@integer/toxMaxNameLength"
+        android:maxLines="1"
+        android:minHeight="48dp"
+        android:paddingHorizontal="12dp"
+        android:textColor="@color/mg_text_primary"
+        android:textColorHint="@color/mg_text_hint" />
+
+    <View
+        android:id="@+id/bottomDivider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/mg_divider_on_primary" />
+
+    <LinearLayout
+        android:id="@+id/onboardingActions"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/btnImport"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:orientation="vertical">
-        <TextView android:id="@+id/profileCreationLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="@string/create_a_tox_profile"
-                android:textSize="25sp"
-                app:layout_constraintBottom_toTopOf="@id/username"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_chainStyle="packed"/>
+            android:layout_weight="1"
+            android:background="?android:attr/selectableItemBackground"
+            android:gravity="center"
+            android:text="@string/onboarding_import_with_arrow"
+            android:textAllCaps="true"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
-        <EditText android:id="@+id/username"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:autofillHints="username"
-                android:hint="@string/name"
-                android:inputType="text"
-                android:maxLines="1"
-                android:maxLength="@integer/toxMaxNameLength"
-                app:layout_constraintBottom_toTopOf="@id/btnCreate"
-                app:layout_constraintTop_toBottomOf="@id/profileCreationLabel"
-                tools:targetApi="26"/>
-
-        <Button android:id="@+id/btnCreate"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/create"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/username"/>
-
-        <TextView android:id="@+id/importLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="@string/or_import_existing_save"
-                android:textSize="20sp"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/btnCreate"
-                app:layout_constraintVertical_chainStyle="packed"/>
-
-        <Button android:id="@+id/btnImport"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/import_tox_save"
-                app:layout_constraintTop_toBottomOf="@+id/importLabel"
-                app:layout_constraintVertical_chainStyle="packed"/>
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/btnCreate"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?android:attr/selectableItemBackground"
+            android:gravity="center"
+            android:text="@string/onboarding_create_with_arrow"
+            android:textAllCaps="true"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+    </LinearLayout>
 </LinearLayout>

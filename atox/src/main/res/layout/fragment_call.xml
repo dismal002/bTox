@@ -1,85 +1,167 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/dialer_incall_background_gradient">
 
-    <RelativeLayout
+    <com.dismal.btox.ui.AvatarImageView
+        android:id="@+id/avatarImageView"
+        android:layout_width="112dp"
+        android:layout_height="112dp"
+        android:layout_marginTop="48dp"
+        app:shapeAppearanceOverlay="@style/CircleImageView"
+        app:statusIndicatorVisible="false"
+        app:strokeColor="@null"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/call_contact_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:textColor="@android:color/white"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toBottomOf="@id/avatarImageView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="Jake Peralta" />
+
+    <TextView
+        android:id="@+id/call_status_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:textColor="@color/ui_text_white_90"
+        android:textSize="14sp"
+        app:layout_constraintTop_toBottomOf="@id/call_contact_name"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="Calling..." />
+
+    <Chronometer
+        android:id="@+id/call_duration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:format="%s"
+        android:textColor="@color/ui_text_white_80"
+        android:textSize="13sp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/call_status_text"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="00:42"
+        tools:visibility="visible" />
+
+    <LinearLayout
+        android:id="@+id/control_container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="24dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentEnd="true"
-            android:layout_above="@id/control_container">
-        <ltd.evilcorp.atox.ui.AvatarImageView
-                android:id="@+id/avatarImageView"
-                android:layout_height="match_parent"
-                android:layout_width="match_parent"
-                android:layout_centerInParent="true"
-                app:statusIndicatorVisible="false"
-                app:strokeColor="@null" />
-    </RelativeLayout>
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:weightSum="3">
 
-    <RelativeLayout android:id="@+id/control_container"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:background="@color/transparentBar"
-            android:clipToPadding="false"
-            android:padding="16dp">
-
-        <ImageButton android:id="@+id/microphone_control"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_alignParentStart="true"
-                android:layout_margin="16dp"
-                android:background="@null"
-                android:contentDescription="@string/microphone_control"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_mic"/>
-
-        <ImageButton android:id="@+id/speakerphone"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_margin="16dp"
-                android:layout_toEndOf="@id/microphone_control"
-                android:background="@null"
-                android:contentDescription="@string/speakerphone_toggle"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_speakerphone"/>
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton android:id="@+id/end_call"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:layout_alignParentTop="true"
-                android:contentDescription="@string/end_call"
-                android:src="@drawable/ic_call_end"
-                app:backgroundTint="@android:color/holo_red_dark" />
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
 
-        <ImageButton android:id="@+id/back_to_chat"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_alignParentEnd="true"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="16dp"
-                android:background="@null"
-                android:contentDescription="@string/return_to_chat"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_chat"/>
-    </RelativeLayout>
+                <ImageButton
+                    android:id="@+id/microphone_control"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@drawable/dialer_incall_button_background"
+                    android:contentDescription="@string/microphone_control"
+                    android:padding="14dp"
+                    android:src="@drawable/ic_mic" />
 
-    <com.google.android.material.imageview.ShapeableImageView android:id="@+id/user_avatar"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="16dp"
-            android:src="@mipmap/ic_launcher"
-            android:visibility="invisible"
-            app:shapeAppearanceOverlay="@style/CircleImageView"
-            app:strokeColor="@null"/>
-</RelativeLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/microphone_control"
+                    android:textColor="@android:color/white"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageButton
+                    android:id="@+id/speakerphone"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@drawable/dialer_incall_button_background"
+                    android:contentDescription="@string/speakerphone_toggle"
+                    android:padding="14dp"
+                    android:src="@drawable/ic_speakerphone" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/speakerphone_toggle"
+                    android:textColor="@android:color/white"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageButton
+                    android:id="@+id/back_to_chat"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@drawable/dialer_incall_button_background"
+                    android:contentDescription="@string/return_to_chat"
+                    android:padding="14dp"
+                    android:src="@drawable/ic_chat" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/return_to_chat"
+                    android:textColor="@android:color/white"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/end_call"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="22dp"
+            android:background="@drawable/dialer_incall_end_call_background"
+            android:contentDescription="@string/end_call"
+            android:padding="18dp"
+            android:src="@drawable/ic_call_end" />
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

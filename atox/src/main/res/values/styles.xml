@@ -3,30 +3,49 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="actionModeBackground">@drawable/cab_bg_white</item>
+        <item name="android:actionModeBackground">@drawable/cab_bg_white</item>
+        <item name="actionModeCloseDrawable">@drawable/ic_cancel_small_dark</item>
+        <item name="android:actionModeCloseDrawable">@drawable/ic_cancel_small_dark</item>
 
         <item name="android:navigationBarColor">#B3777777</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">@color/colorPrimaryDark</item>
     </style>
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light"/>
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.DayNight"/>
 
     <style name="OptionGroup">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_margin">16dp</item>
-        <item name="android:elevation">4dp</item>
+        <item name="android:layout_margin">0dp</item>
+        <item name="android:elevation">0dp</item>
+        <item name="cardCornerRadius">0dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="cardUseCompatPadding">false</item>
+        <item name="cardBackgroundColor">@color/mg_input_background</item>
     </style>
 
     <style name="OptionRow">
         <item name="android:gravity">center_vertical</item>
-        <item name="android:layout_marginStart">16dp</item>
+        <item name="android:layout_marginStart">0dp</item>
         <item name="android:orientation">horizontal</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
     </style>
 
     <style name="OptionItemText">
-        <item name="android:fontFamily">sans-serif-light</item>
-        <item name="android:padding">18dp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
         <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/mg_text_primary</item>
+    </style>
+
+    <style name="SettingsSwitch" parent="@style/Widget.AppCompat.CompoundButton.Switch">
+        <item name="colorControlActivated">@color/mg_top_bar_bg</item>
+        <item name="thumbTint">@color/settings_switch_thumb_tint</item>
+        <item name="trackTint">@color/settings_switch_track_tint</item>
     </style>
 
     <style name="CircleImageView">
@@ -42,4 +61,5 @@
     <style name="DialogSlideAnimation" parent="Theme.AppCompat.Dialog">
         <item name="android:windowAnimationStyle">@style/DialogAnimation</item>
     </style>
+
 </resources>

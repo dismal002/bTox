@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sendButtonContentDescription">Send</string>
+    <string name="mms_text">MMS</string>
+    <string name="message_image_content_description">Image</string>
+    <string name="conversation_message_view_subject_text">Subject:</string>
+</resources>

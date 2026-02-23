@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="dividerColor" type="color">#FF2A2A2A</item>
+
+    <color name="mg_surface">#FF121212</color>
+    <color name="mg_chat_surface">#FF121212</color>
+    <color name="mg_text_primary">#FFF1F1F1</color>
+    <color name="mg_text_secondary">#FFCCCCCC</color>
+    <color name="mg_text_muted">#FFB0B0B0</color>
+    <color name="mg_text_hint">#99FFFFFF</color>
+    <color name="mg_input_background">#FF1E1E1E</color>
+    <color name="mg_divider_on_primary">#55FFFFFF</color>
+    <color name="mg_icon_tint">#FFCECECE</color>
+    <color name="mg_timestamp_text">#99FFFFFF</color>
+</resources>

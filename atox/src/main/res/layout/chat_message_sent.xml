@@ -3,6 +3,8 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="2dp"
         android:orientation="vertical">
     <TextView android:id="@+id/message"
             android:layout_width="wrap_content"
@@ -10,10 +12,14 @@
             android:layout_gravity="end"
             android:layout_marginStart="@dimen/message_margin"
             android:autoLink="all"
-            android:background="@drawable/sent_message_bubble"
-            android:padding="8dp"
-            android:textColor="@android:color/white"
-            android:textColorLink="@android:color/holo_orange_light"
+            android:background="@drawable/msg_bubble_outgoing"
+            android:maxWidth="260dp"
+            android:minWidth="92dp"
+            android:minHeight="40dp"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="10dp"
+            android:textColor="@android:color/black"
+            android:textColorLink="@android:color/black"
             tools:text="Message I sent"/>
 
     <TextView android:id="@+id/timestamp"
@@ -21,6 +27,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
-            android:layout_marginHorizontal="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="1dp"
+            android:textColor="@color/mg_timestamp_text"
             tools:text="2020-12-24"/>
 </LinearLayout>

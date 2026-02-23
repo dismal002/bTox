@@ -16,28 +16,79 @@
             <androidx.appcompat.widget.Toolbar android:id="@+id/toolbar"
                     android:layout_width="match_parent"
                     android:layout_height="?attr/actionBarSize"
-                    android:background="?attr/colorPrimary"
+                    android:background="@color/mg_top_bar_bg"
                     app:popupTheme="@style/AppTheme.PopupOverlay"/>
         </com.google.android.material.appbar.AppBarLayout>
 
         <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:background="@color/mg_surface"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior">
-            <TextView android:id="@+id/noContactsCallToAction"
+
+            <com.android.messaging.ui.ListEmptyView
+                    android:id="@+id/noConversationsView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
-                    android:text="@string/no_contacts_call_to_action"
-                    app:layout_constraintTop_toTopOf="parent"/>
+                    android:layout_gravity="center_vertical"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                <ImageView
+                        android:id="@+id/empty_image_hint"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:contentDescription="@null"
+                        android:importantForAccessibility="no" />
+
+                <TextView
+                        android:id="@+id/empty_text_hint"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="60dp"
+                        android:layout_marginTop="20dp"
+                        android:layout_marginRight="60dp"
+                        android:gravity="center_horizontal"
+                        android:textColor="@color/mg_text_muted"
+                        android:textSize="14sp" />
+            </com.android.messaging.ui.ListEmptyView>
+
             <ListView android:id="@+id/contactList"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
                     android:background="@null"
                     android:clipToPadding="false"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="88dp"
                     android:drawSelectorOnTop="true"
                     android:listSelector="@drawable/disable_ripple_effect"
+                    android:divider="@android:color/transparent"
+                    android:dividerHeight="0dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     tools:listitem="@layout/contact_list_view_item"/>
+
+            <ImageView
+                    android:id="@+id/startNewConversationButton"
+                    android:layout_width="@dimen/fab_size"
+                    android:layout_height="@dimen/fab_size"
+                    android:layout_marginEnd="@dimen/fab_left_right_margin"
+                    android:layout_marginBottom="@dimen/fab_bottom_margin"
+                    android:background="@drawable/fab_new_message_bg"
+                    android:contentDescription="@string/start_new_conversation"
+                    android:elevation="@dimen/fab_elevation"
+                    android:paddingBottom="@dimen/fab_padding_bottom"
+                    android:scaleType="center"
+                    android:src="@drawable/ic_add_white"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

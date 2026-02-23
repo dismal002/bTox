@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="compose_message_view_subject_hint_text">Subject</string>
+    <string name="delete_subject_content_description">Delete subject</string>
+    <string name="attachMediaButtonContentDescription">Attach</string>
+    <string name="compose_message_view_hint_text">Message</string>
+    <!-- `mimetype_handler_not_found` exists in the main strings.xml; avoid duplicate -->
+</resources>

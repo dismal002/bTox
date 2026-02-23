@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="subject_editor_bubble">#FF1E1E1E</color>
+    <color name="message_bubble_outgoing_bg">#FFFFFFFF</color>
+
+    <color name="ui_white">#FF1F1F1F</color>
+    <color name="ui_icon_dark">#FFF1F1F1</color>
+    <color name="ui_text_primary">#FFF1F1F1</color>
+    <color name="ui_divider">#FF2A2A2A</color>
+</resources>

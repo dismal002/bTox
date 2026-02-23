@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Placeholder dimens for Messaging-goplay fastscroll previews and thumb/track sizes -->
+    <dimen name="fastscroll_preview_corner_radius">8dp</dimen>
+    <dimen name="fastscroll_thumb_height">48dp</dimen>
+    <dimen name="fastscroll_track_width">4dp</dimen>
+</resources>

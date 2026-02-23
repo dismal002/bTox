@@ -1,7 +1,7 @@
 # bTox
 
 
-The reasonable Tox client for Android based on aTox with new feature.
+The reasonable Tox client for Android based on aTox with new features.
 
 <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" alt="chat screen" height="600"> <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" alt="contact screen" height="600">
 

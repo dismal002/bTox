@@ -1,9 +1,5 @@
-# aTox
+# bTox
 
-[![IRC](https://img.shields.io/badge/libera-%23atox-brightgreen.svg)][libera]
-[![License](https://img.shields.io/github/license/evilcorpltd/aTox)][license]
-[![Last release](https://img.shields.io/github/v/release/evilcorpltd/aTox)][releases]
-[![Translation status](https://hosted.weblate.org/widgets/atox/-/app/svg-badge.svg)][weblate]
 
 The reasonable Tox client for Android based on aTox with new feature.
 

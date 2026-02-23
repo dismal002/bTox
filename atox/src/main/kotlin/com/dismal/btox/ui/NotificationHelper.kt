@@ -44,6 +44,7 @@ import com.dismal.btox.KEY_TEXT_REPLY
 import com.dismal.btox.PendingIntentCompat
 import com.dismal.btox.R
 import com.dismal.btox.hasPermission
+import com.dismal.btox.settings.Settings
 import com.dismal.btox.ui.chat.CONTACT_PUBLIC_KEY
 import com.dismal.btox.ui.chat.FOCUS_ON_MESSAGE_BOX
 import ltd.evilcorp.core.vo.Contact
@@ -58,7 +59,10 @@ private const val FRIEND_REQUEST = "aTox friend requests"
 private const val CALL = "aTox calls"
 
 @Singleton
-class NotificationHelper @Inject constructor(private val context: Context) {
+class NotificationHelper @Inject constructor(
+    private val context: Context,
+    private val settings: Settings,
+) {
     private val notifier = NotificationManagerCompat.from(context)
     private val notifierOld = context.getSystemService<NotificationManager>()!!
 
@@ -118,6 +122,14 @@ class NotificationHelper @Inject constructor(private val context: Context) {
         outgoing: Boolean = false,
         silent: Boolean = outgoing,
     ) {
+        if (settings.isContactBlocked(PublicKey(contact.publicKey))) {
+            return
+        }
+
+        if (!outgoing && settings.isContactMuted(PublicKey(contact.publicKey))) {
+            return
+        }
+
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.POST_NOTIFICATIONS,
@@ -129,7 +141,7 @@ class NotificationHelper @Inject constructor(private val context: Context) {
 
         val notificationBuilder = NotificationCompat.Builder(context, MESSAGE)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-            .setSmallIcon(android.R.drawable.sym_action_chat)
+            .setSmallIcon(R.drawable.stat_notify_chat)
             .setContentTitle(contact.name.ifEmpty { context.getText(R.string.contact_default_name) })
             .setContentText(message)
             .setContentIntent(deepLinkToChat(PublicKey(contact.publicKey)))
@@ -233,7 +245,7 @@ class NotificationHelper @Inject constructor(private val context: Context) {
 
         val notificationBuilder = NotificationCompat.Builder(context, FRIEND_REQUEST)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-            .setSmallIcon(android.R.drawable.btn_star_big_on)
+            .setSmallIcon(R.drawable.stat_notify_chat)
             .setContentTitle(context.getString(R.string.friend_request_from, friendRequest.publicKey))
             .setContentText(friendRequest.message)
             .setContentIntent(
@@ -263,7 +275,7 @@ class NotificationHelper @Inject constructor(private val context: Context) {
         dismissCallNotification(PublicKey(contact.publicKey))
         val notificationBuilder = NotificationCompat.Builder(context, CALL)
             .setCategory(NotificationCompat.CATEGORY_CALL)
-            .setSmallIcon(android.R.drawable.ic_menu_call)
+            .setSmallIcon(R.drawable.stat_notify_chat)
             .setContentTitle(context.getString(R.string.ongoing_call))
             .setContentText(
                 context.getString(
@@ -303,6 +315,14 @@ class NotificationHelper @Inject constructor(private val context: Context) {
     }
 
     fun showPendingCallNotification(status: UserStatus, c: Contact) {
+        if (settings.isContactBlocked(PublicKey(c.publicKey))) {
+            return
+        }
+
+        if (settings.isContactMuted(PublicKey(c.publicKey))) {
+            return
+        }
+
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.POST_NOTIFICATIONS,
@@ -326,7 +346,7 @@ class NotificationHelper @Inject constructor(private val context: Context) {
 
         val notification = notificationBuilder
             .setCategory(NotificationCompat.CATEGORY_CALL)
-            .setSmallIcon(android.R.drawable.ic_menu_call)
+            .setSmallIcon(R.drawable.stat_notify_chat)
             .setContentTitle(context.getString(R.string.incoming_call))
             .setContentText(context.getString(R.string.incoming_call_from, c.name))
             .addAction(

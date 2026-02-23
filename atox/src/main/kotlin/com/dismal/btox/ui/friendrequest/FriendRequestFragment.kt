@@ -25,7 +25,7 @@ const val FRIEND_REQUEST_PUBLIC_KEY = "FRIEND_REQUEST_PUBLIC_KEY"
 
 class FriendRequestFragment : BaseFragment<FragmentFriendRequestBinding>(FragmentFriendRequestBinding::inflate) {
     private val vm: FriendRequestViewModel by viewModels { vmFactory }
-    private lateinit var friendRequest: FriendRequest
+    private var friendRequest: FriendRequest? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) = binding.run {
         ViewCompat.setOnApplyWindowInsetsListener(view) { _, compat ->
@@ -39,25 +39,35 @@ class FriendRequestFragment : BaseFragment<FragmentFriendRequestBinding>(Fragmen
         }
 
         toolbar.setNavigationIcon(R.drawable.ic_back)
+        toolbar.title = getString(R.string.friend_request)
         toolbar.setNavigationOnClickListener {
-            requireActivity().onBackPressedDispatcher.onBackPressed()
+            findNavController().navigateUp()
         }
 
+        reject.isEnabled = false
+        accept.isEnabled = false
+
         vm.byId(PublicKey(requireStringArg(FRIEND_REQUEST_PUBLIC_KEY))).observe(viewLifecycleOwner) {
-            friendRequest = it
-            from.text = it.publicKey
-            message.text = it.message
+            val request = it
+            if (request == null) {
+                findNavController().popBackStack()
+                return@observe
+            }
+
+            friendRequest = request
+            from.text = request.publicKey
+            message.text = request.message
             reject.isEnabled = true
             accept.isEnabled = true
         }
 
         accept.setOnClickListener {
-            vm.accept(friendRequest)
+            friendRequest?.let(vm::accept)
             findNavController().popBackStack()
         }
 
         reject.setOnClickListener {
-            vm.reject(friendRequest)
+            friendRequest?.let(vm::reject)
             findNavController().popBackStack()
         }
     }

@@ -13,6 +13,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.NavHostFragment
 import kotlin.math.max
 import com.dismal.btox.R
 import com.dismal.btox.databinding.FragmentContactProfileBinding
@@ -25,6 +26,10 @@ import ltd.evilcorp.core.vo.PublicKey
 
 class ContactProfileFragment : BaseFragment<FragmentContactProfileBinding>(FragmentContactProfileBinding::inflate) {
     private val viewModel: ContactProfileViewModel by viewModels { vmFactory }
+    private var isStarred = false
+    private fun navigateBack() {
+        NavHostFragment.findNavController(this).navigateUp()
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) = binding.run {
         ViewCompat.setOnApplyWindowInsetsListener(view) { _, compat ->
@@ -39,10 +44,10 @@ class ContactProfileFragment : BaseFragment<FragmentContactProfileBinding>(Fragm
 
         toolbar.setNavigationIcon(R.drawable.ic_back)
         toolbar.setNavigationOnClickListener {
-            requireActivity().onBackPressedDispatcher.onBackPressed()
+            navigateBack()
         }
         toolbar.inflateMenu(R.menu.contact_detail_menu)
-        toolbar.setOnMenuItemClickListener(::onToolbarItemSelected)
+        toolbar.setOnMenuItemClickListener { item -> onToolbarItemSelected(item) }
         for (i in 0 until toolbar.menu.size()) {
             toolbar.menu.getItem(i).icon?.mutate()?.setTint(android.graphics.Color.WHITE)
         }
@@ -50,7 +55,7 @@ class ContactProfileFragment : BaseFragment<FragmentContactProfileBinding>(Fragm
         viewModel.publicKey = PublicKey(requireStringArg(CONTACT_PUBLIC_KEY))
         viewModel.contact.observe(viewLifecycleOwner) { contact ->
             if (contact == null) {
-                requireActivity().onBackPressedDispatcher.onBackPressed()
+                navigateBack()
                 return@observe
             }
             val displayName = contact.name.ifBlank { getString(R.string.contact_default_name) }
@@ -68,16 +73,31 @@ class ContactProfileFragment : BaseFragment<FragmentContactProfileBinding>(Fragm
                 ConnectionStatus.TCP -> getText(R.string.atox_connected_with_tcp)
                 ConnectionStatus.UDP -> getText(R.string.atox_connected_with_udp)
             }
+            isStarred = contact.starred
+            updateStarIcon()
         }
     }
 
     private fun onToolbarItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.action_favorite, R.id.action_edit_contact, R.id.action_contact_more -> {
+            R.id.action_favorite -> {
+                isStarred = !isStarred
+                viewModel.setStarred(isStarred)
+                updateStarIcon()
+                true
+            }
+            R.id.action_edit_contact, R.id.action_contact_more -> {
                 Toast.makeText(requireContext(), R.string.action_not_supported, Toast.LENGTH_SHORT).show()
                 true
             }
             else -> false
         }
+    }
+
+    private fun updateStarIcon() {
+        binding.toolbar.menu.findItem(R.id.action_favorite)?.setIcon(
+            if (isStarred) R.drawable.quantum_ic_star_vd_theme_24
+            else R.drawable.quantum_ic_star_border_vd_theme_24,
+        )
     }
 }

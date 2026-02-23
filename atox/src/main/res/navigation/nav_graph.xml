@@ -108,7 +108,23 @@
     <fragment android:id="@+id/settingsFragment"
             android:name="com.dismal.btox.ui.settings.SettingsFragment"
             android:label="SettingsFragment"
-            tools:layout="@layout/fragment_settings"/>
+            tools:layout="@layout/fragment_settings">
+        <action android:id="@+id/action_settingsFragment_to_advancedSettingsFragment"
+                app:destination="@id/advancedSettingsFragment"
+                app:enterAnim="@anim/slide_in_right"
+                app:exitAnim="@anim/fade_out"
+                app:popEnterAnim="@anim/fade_in"
+                app:popExitAnim="@anim/slide_out_right"/>
+    </fragment>
+    <fragment android:id="@+id/advancedSettingsFragment"
+            android:name="com.dismal.btox.ui.settings.SettingsFragment"
+            android:label="AdvancedSettingsFragment"
+            tools:layout="@layout/fragment_settings">
+        <argument
+            android:name="settings_mode"
+            app:argType="string"
+            android:defaultValue="advanced"/>
+    </fragment>
     <fragment
             android:id="@+id/userProfileFragment"
             android:name="com.dismal.btox.ui.userprofile.UserProfileFragment"

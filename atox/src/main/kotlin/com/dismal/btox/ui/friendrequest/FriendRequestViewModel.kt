@@ -14,7 +14,7 @@ import ltd.evilcorp.core.vo.PublicKey
 import ltd.evilcorp.domain.feature.FriendRequestManager
 
 class FriendRequestViewModel @Inject constructor(private val friendRequests: FriendRequestManager) : ViewModel() {
-    fun byId(pk: PublicKey): LiveData<FriendRequest> = friendRequests.get(pk).asLiveData()
+    fun byId(pk: PublicKey): LiveData<FriendRequest?> = friendRequests.get(pk).asLiveData()
     fun accept(request: FriendRequest) = friendRequests.accept(request)
     fun reject(request: FriendRequest) = friendRequests.reject(request)
 }

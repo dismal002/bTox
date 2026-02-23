@@ -119,6 +119,7 @@ class ContactAdapter(private val inflater: LayoutInflater, private val context: 
                     } else {
                         View.GONE
                     }
+                    vh.starredIndicator.visibility = if (starred) View.VISIBLE else View.GONE
                 }
 
                 view
@@ -137,5 +138,6 @@ class ContactAdapter(private val inflater: LayoutInflater, private val context: 
         val avatarImageView: AvatarImageView = row.avatarImageView
         val selectedAvatar: ImageView = row.selectedAvatar
         val unreadIndicator: ImageView = row.unreadIndicator
+        val starredIndicator: ImageView = row.starredIndicator
     }
 }

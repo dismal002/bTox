@@ -109,6 +109,10 @@ class EventListenerCallbacks @Inject constructor(
         }
 
         friendRequestHandler = handler@{ publicKey, _, message ->
+            if (settings.isContactBlocked(PublicKey(publicKey))) {
+                return@handler
+            }
+
             if (friendRequestRepository.count() > MAX_ACTIVE_FRIEND_REQUESTS) {
                 if (!maxFriendRequestsWarningActive) {
                     Log.w(TAG, "Ignoring friend requests w/ $MAX_ACTIVE_FRIEND_REQUESTS already active")
@@ -124,7 +128,11 @@ class EventListenerCallbacks @Inject constructor(
             notificationHelper.showFriendRequestNotification(request, silent = tox.getStatus() == UserStatus.Busy)
         }
 
-        friendMessageHandler = { publicKey, type, _, msg ->
+        friendMessageHandler = handler@{ publicKey, type, _, msg ->
+            if (settings.isContactBlocked(PublicKey(publicKey))) {
+                return@handler
+            }
+
             messageRepository.add(
                 Message(publicKey, msg, Sender.Received, type.toMessageType(), Int.MIN_VALUE, Date().time),
             )
@@ -146,7 +154,11 @@ class EventListenerCallbacks @Inject constructor(
             fileTransferManager.addDataToTransfer(publicKey, fileNumber, position, data)
         }
 
-        fileRecvHandler = { publicKey, fileNo, kind, fileSize, filename ->
+        fileRecvHandler = handler@{ publicKey, fileNo, kind, fileSize, filename ->
+            if (settings.isContactBlocked(PublicKey(publicKey))) {
+                return@handler
+            }
+
             val name = if (kind == FileKind.Avatar.ordinal) publicKey else filename
 
             val id = fileTransferManager.add(FileTransfer(publicKey, fileNo, kind, fileSize, name, outgoing = false))
@@ -180,14 +192,21 @@ class EventListenerCallbacks @Inject constructor(
             userRepository.updateConnection(tox.publicKey.string(), status)
         }
 
-        friendTypingHandler = { publicKey, isTyping ->
+        friendTypingHandler = handler@{ publicKey, isTyping ->
+            if (settings.isContactBlocked(PublicKey(publicKey))) {
+                contactRepository.setTyping(publicKey, false)
+                return@handler
+            }
             contactRepository.setTyping(publicKey, isTyping)
         }
     }
 
     fun setUp(listener: ToxAvEventListener) = with(listener) {
-        callHandler = { pk, audioEnabled, videoEnabled ->
+        callHandler = handler@{ pk, audioEnabled, videoEnabled ->
             Log.e(TAG, "call ${pk.fingerprint()} $audioEnabled $videoEnabled")
+            if (settings.isContactBlocked(PublicKey(pk))) {
+                return@handler
+            }
             scope.launch {
                 val contact = tryGetContact(pk, "Call") ?: return@launch
                 notificationHelper.showPendingCallNotification(tox.getStatus(), contact)

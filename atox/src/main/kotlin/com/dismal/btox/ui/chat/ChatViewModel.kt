@@ -7,6 +7,7 @@ package com.dismal.btox.ui.chat
 
 import android.content.ContentResolver
 import android.content.Context
+import android.media.MediaPlayer
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -94,12 +95,31 @@ class ChatViewModel @Inject constructor(
 
     var contactOnline = false
 
-    fun send(message: String, type: MessageType) = chatManager.sendMessage(publicKey, message, type)
+    fun send(message: String, type: MessageType) {
+        if (message.isBlank()) return
+        if (settings.isContactBlocked(publicKey)) return
+        chatManager.sendMessage(publicKey, message, type)
+        if (settings.outgoingMessageSoundsEnabled) {
+            try {
+                val player = MediaPlayer.create(context, R.raw.message_sent)
+                player?.setOnCompletionListener { it.release() }
+                player?.setOnErrorListener { mp, _, _ ->
+                    mp.release()
+                    true
+                }
+                player?.start()
+            } catch (e: Exception) {
+                Log.w(TAG, "Unable to play outgoing message sound", e)
+            }
+        }
+    }
 
     fun clearHistory() = scope.launch {
         chatManager.clearHistory(publicKey)
         fileTransferManager.deleteAll(publicKey)
     }
+
+    fun setArchived(archived: Boolean) = contactManager.setArchived(publicKey, archived)
 
     fun setActiveChat(pk: PublicKey) {
         if (pk.string().isEmpty()) {

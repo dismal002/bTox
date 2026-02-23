@@ -18,6 +18,7 @@ import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 import javax.inject.Inject
 import com.dismal.btox.BootReceiver
+import ltd.evilcorp.core.vo.PublicKey
 import ltd.evilcorp.domain.tox.ProxyType
 
 enum class FtAutoAccept {
@@ -110,11 +111,51 @@ class Settings @Inject constructor(private val ctx: Context) {
         get() = preferences.getBoolean("confirm_calling", true)
         set(confirm) = preferences.edit { putBoolean("confirm_calling", confirm) }
 
+    var outgoingMessageSoundsEnabled: Boolean
+        get() = preferences.getBoolean("outgoing_message_sounds_enabled", true)
+        set(enabled) = preferences.edit { putBoolean("outgoing_message_sounds_enabled", enabled) }
+
+    var nfcFriendAddEnabled: Boolean
+        get() = preferences.getBoolean("nfc_friend_add_enabled", false)
+        set(enabled) = preferences.edit { putBoolean("nfc_friend_add_enabled", enabled) }
+
     var appLockMode: AppLockMode
         get() = AppLockMode.entries.getOrElse(preferences.getInt("app_lock_mode", AppLockMode.None.ordinal)) {
             AppLockMode.None
         }
         set(mode) = preferences.edit { putInt("app_lock_mode", mode.ordinal) }
+
+    fun isContactMuted(publicKey: PublicKey): Boolean = mutedContacts.contains(publicKey.string())
+
+    fun setContactMuted(publicKey: PublicKey, muted: Boolean) {
+        val current = mutedContacts
+        val updated = if (muted) {
+            current + publicKey.string()
+        } else {
+            current - publicKey.string()
+        }
+        preferences.edit { putStringSet("muted_contacts", updated) }
+    }
+
+    private val mutedContacts: Set<String>
+        get() = preferences.getStringSet("muted_contacts", emptySet())?.toSet() ?: emptySet()
+
+    fun isContactBlocked(publicKey: PublicKey): Boolean = blockedContacts.contains(publicKey.string())
+
+    fun setContactBlocked(publicKey: PublicKey, blocked: Boolean) {
+        val current = blockedContacts
+        val updated = if (blocked) {
+            current + publicKey.string()
+        } else {
+            current - publicKey.string()
+        }
+        preferences.edit { putStringSet("blocked_contacts", updated) }
+    }
+
+    fun getBlockedContactKeys(): Set<String> = blockedContacts
+
+    private val blockedContacts: Set<String>
+        get() = preferences.getStringSet("blocked_contacts", emptySet())?.toSet() ?: emptySet()
 
     fun hasAppPassword(): Boolean =
         preferences.contains("app_password_hash") && preferences.contains("app_password_salt")

@@ -93,7 +93,9 @@ class CreateProfileFragment : BaseFragment<FragmentProfileBinding>(FragmentProfi
         }
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
-            activity?.finish()
+            if (!findNavController().popBackStack()) {
+                activity?.finish()
+            }
         }
 
         btnCreate.setOnClickListener {

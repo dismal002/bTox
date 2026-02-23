@@ -11,6 +11,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.PorterDuff
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -157,8 +158,14 @@ class ChatFragment : BaseFragment<FragmentChatBinding>(FragmentChatBinding::infl
         toolbar.setNavigationIcon(R.drawable.ic_back)
         toolbar.setNavigationOnClickListener {
             WindowInsetsControllerCompat(requireActivity().window, view).hide(WindowInsetsCompat.Type.ime())
-            requireActivity().onBackPressedDispatcher.onBackPressed()
+            findNavController().navigateUp()
         }
+
+        // Keep Messaging-goplay 9-patch compose shape while applying theme-specific input color.
+        outgoingMessage.background?.mutate()?.setColorFilter(
+            ContextCompat.getColor(requireContext(), R.color.mg_input_background),
+            PorterDuff.Mode.SRC_IN,
+        )
 
         toolbar.inflateMenu(R.menu.chat_options_menu)
         toolbar.setOnMenuItemClickListener { item ->
@@ -197,7 +204,14 @@ class ChatFragment : BaseFragment<FragmentChatBinding>(FragmentChatBinding::infl
                     true
                 }
                 R.id.action_archive -> {
-                    Toast.makeText(requireContext(), R.string.archive_not_supported, Toast.LENGTH_SHORT).show()
+                    val archived = viewModel.contact.value?.archived == true
+                    viewModel.setArchived(!archived)
+                    Toast.makeText(
+                        requireContext(),
+                        getString(if (archived) R.string.conversation_unarchived else R.string.conversation_archived),
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                    findNavController().popBackStack()
                     true
                 }
                 R.id.action_delete -> {
@@ -269,6 +283,9 @@ class ChatFragment : BaseFragment<FragmentChatBinding>(FragmentChatBinding::infl
             avatarImageView.setFrom(it)
             adapter.activeContact = it
             adapter.notifyDataSetChanged()
+            toolbar.menu.findItem(R.id.action_archive)?.title = getString(
+                if (it.archived) R.string.action_unarchive else R.string.action_archive,
+            )
 
             if (it.draftMessage.isNotEmpty() && outgoingMessage.text.isEmpty()) {
                 outgoingMessage.setText(it.draftMessage)
@@ -431,6 +448,7 @@ class ChatFragment : BaseFragment<FragmentChatBinding>(FragmentChatBinding::infl
                     mode.title = null
                     mode.subtitle = null
                     mode.menuInflater.inflate(R.menu.chat_message_action_mode_menu, menu)
+                    binding.appBarLayout.visibility = View.GONE
                     // Some devices/themes ignore actionModeBackground; force Messaging-style CAB colors.
                     (host.findViewById<View?>(androidx.appcompat.R.id.action_mode_bar)
                         ?: host.findViewById(androidx.appcompat.R.id.action_bar))
@@ -493,6 +511,7 @@ class ChatFragment : BaseFragment<FragmentChatBinding>(FragmentChatBinding::infl
                 }
 
                 override fun onDestroyActionMode(mode: ActionMode) {
+                    binding.appBarLayout.visibility = View.VISIBLE
                     if (messageActionMode === mode) {
                         messageActionMode = null
                     }

@@ -2,11 +2,13 @@ package com.dismal.btox.ui.chat
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.graphics.PorterDuff
 import android.os.Bundle
 import android.view.*
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.net.toUri
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -57,6 +59,10 @@ class MgChatFragment : Fragment() {
         outgoingMessage = view.findViewById(R.id.outgoingMessage)
         sendButton = view.findViewById(R.id.send)
         attachButton = view.findViewById(R.id.attach)
+        outgoingMessage.background?.mutate()?.setColorFilter(
+            ContextCompat.getColor(requireContext(), R.color.mg_input_background),
+            PorterDuff.Mode.SRC_IN,
+        )
         val bottomBar = view.findViewById<View>(R.id.bottomBar)
         val appBarLayout = view.findViewById<View>(R.id.appBarLayout)
 

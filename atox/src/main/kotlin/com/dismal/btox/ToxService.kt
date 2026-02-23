@@ -91,7 +91,7 @@ class ToxService : LifecycleService() {
             }
 
         val builder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_notification)
+            .setSmallIcon(R.drawable.stat_notify_chat)
             .setColor(ResourcesCompat.getColor(resources, R.color.colorPrimary, null))
             .setContentIntent(pendingIntent)
             .setContentTitle(getString(R.string.tox_service_running))

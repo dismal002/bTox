@@ -12,6 +12,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import com.dismal.btox.settings.Settings
 import com.dismal.btox.tox.ToxStarter
 import ltd.evilcorp.core.repository.MessageRepository
 import ltd.evilcorp.core.vo.Contact
@@ -27,6 +28,7 @@ class AddContactViewModel @Inject constructor(
     private val scope: CoroutineScope,
     private val messageRepository: MessageRepository,
     private val contactManager: ContactManager,
+    private val settings: Settings,
     private val tox: Tox,
     private val toxStarter: ToxStarter,
 ) : ViewModel() {
@@ -35,6 +37,7 @@ class AddContactViewModel @Inject constructor(
 
     fun isToxRunning() = tox.started
     fun tryLoadTox(): Boolean = toxStarter.tryLoadTox(null) == ToxSaveStatus.Ok
+    fun isNfcFriendAddEnabled(): Boolean = settings.nfcFriendAddEnabled
 
     private fun addToChatLog(publicKey: String, message: String) = scope.launch {
         messageRepository.add(

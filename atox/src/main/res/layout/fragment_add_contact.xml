@@ -55,6 +55,16 @@
                     android:textSize="24sp"
                     tools:targetApi="26" />
 
+                <ImageView
+                    android:id="@+id/toxIdErrorIcon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginStart="8dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/error_24"
+                    android:tint="@android:color/white"
+                    android:visibility="gone" />
+
                 <ImageButton
                     android:id="@+id/read_qr"
                     android:layout_width="40dp"
@@ -63,7 +73,18 @@
                     android:background="@android:color/transparent"
                     android:contentDescription="@string/read_qr"
                     android:padding="6dp"
-                    android:src="@drawable/ic_qr_code"
+                    android:src="@drawable/qr_code_24"
+                    app:tint="@android:color/white" />
+
+                <ImageButton
+                    android:id="@+id/read_nfc"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="@string/read_nfc"
+                    android:padding="6dp"
+                    android:src="@drawable/contactless_24"
                     app:tint="@android:color/white" />
             </LinearLayout>
 
@@ -72,41 +93,16 @@
                 android:layout_height="1dp"
                 android:background="@color/mg_divider_on_primary" />
 
-            <LinearLayout
+            <TextView
+                android:id="@+id/toxIdErrorText"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/tabFrequent"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:text="@string/frequents"
-                    android:textAllCaps="true"
-                    android:textColor="@android:color/white"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tabAllContacts"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:text="@string/all_contacts"
-                    android:textAllCaps="true"
-                    android:textColor="#CCFFFFFF"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="160dp"
-                android:layout_height="3dp"
-                android:background="#CCFFFFFF" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="8dp"
+                android:textColor="@android:color/white"
+                android:textSize="12sp"
+                android:visibility="gone"
+                tools:text="Invalid Tox ID" />
         </LinearLayout>
 
         <LinearLayout

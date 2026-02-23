@@ -6,29 +6,33 @@
         android:layout_marginTop="2dp"
         android:layout_marginBottom="2dp"
         android:orientation="vertical">
-    <TextView android:id="@+id/message"
+    <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:layout_gravity="end"
+            android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/message_margin"
-            android:autoLink="all"
             android:background="@drawable/msg_bubble_outgoing"
-            android:maxWidth="260dp"
             android:minWidth="92dp"
             android:minHeight="40dp"
+            android:orientation="vertical"
             android:paddingHorizontal="12dp"
-            android:paddingVertical="10dp"
-            android:textColor="@android:color/black"
-            android:textColorLink="@android:color/black"
-            tools:text="Message I sent"/>
+            android:paddingTop="10dp"
+            android:paddingBottom="7dp">
+        <TextView android:id="@+id/message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:autoLink="all"
+                android:maxWidth="260dp"
+                android:textColor="@android:color/black"
+                android:textColorLink="@android:color/black"
+                tools:text="Message I sent"/>
 
-    <TextView android:id="@+id/timestamp"
-            style="@style/TextAppearance.AppCompat.Caption"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:layout_marginEnd="8dp"
-            android:layout_marginTop="1dp"
-            android:textColor="@color/mg_timestamp_text"
-            tools:text="2020-12-24"/>
+        <TextView android:id="@+id/timestamp"
+                style="@style/TextAppearance.AppCompat.Caption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:textColor="@color/timestamp_text_outgoing"
+                tools:text="2020-12-24"/>
+    </LinearLayout>
 </LinearLayout>

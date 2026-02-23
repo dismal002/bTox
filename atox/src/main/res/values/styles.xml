@@ -29,17 +29,17 @@
         <item name="android:gravity">center_vertical</item>
         <item name="android:layout_marginStart">0dp</item>
         <item name="android:orientation">horizontal</item>
-        <item name="android:minHeight">56dp</item>
+        <item name="android:minHeight">64dp</item>
         <item name="android:paddingStart">16dp</item>
         <item name="android:paddingEnd">16dp</item>
     </style>
 
     <style name="OptionItemText">
         <item name="android:fontFamily">sans-serif</item>
-        <item name="android:paddingTop">10dp</item>
-        <item name="android:paddingBottom">10dp</item>
-        <item name="android:textSize">16sp</item>
-        <item name="android:textColor">@color/mg_text_primary</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:textColor">@color/mg_text_secondary</item>
     </style>
 
     <style name="SettingsSwitch" parent="@style/Widget.AppCompat.CompoundButton.Switch">

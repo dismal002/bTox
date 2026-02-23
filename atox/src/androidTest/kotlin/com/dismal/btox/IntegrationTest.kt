@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-only
 
-package ltd.evilcorp.atox
+package com.dismal.btox
 
 import android.app.Activity
 import android.content.Context
@@ -28,11 +28,11 @@ import javax.inject.Singleton
 import kotlin.test.Test
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import ltd.evilcorp.atox.di.AndroidModule
-import ltd.evilcorp.atox.di.AppComponent
-import ltd.evilcorp.atox.di.DaoModule
-import ltd.evilcorp.atox.di.ViewModelModule
-import ltd.evilcorp.atox.tox.BootstrapNodeRegistryImpl
+import com.dismal.btox.di.AndroidModule
+import com.dismal.btox.di.AppComponent
+import com.dismal.btox.di.DaoModule
+import com.dismal.btox.di.ViewModelModule
+import com.dismal.btox.tox.BootstrapNodeRegistryImpl
 import ltd.evilcorp.core.db.Database
 import ltd.evilcorp.core.vo.PublicKey
 import ltd.evilcorp.domain.tox.BootstrapNodeRegistry

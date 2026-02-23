@@ -60,7 +60,16 @@ import ltd.evilcorp.domain.tox.ToxSaveStatus
 
 const val ARG_ADD_CONTACT = "add_contact"
 const val ARG_SHARE = "share"
+const val ARG_CONTACT_LIST_MODE = "contact_list_mode"
+const val CONTACT_LIST_MODE_INBOX = "inbox"
+const val CONTACT_LIST_MODE_ARCHIVED = "archived"
+const val CONTACT_LIST_MODE_BLOCKED = "blocked"
 private const val MAX_CONFIRM_DELETE_STRING_LENGTH = 32
+private enum class ContactListMode {
+    Inbox,
+    Archived,
+    Blocked,
+}
 
 private fun User.online(): Boolean = connectionStatus != ConnectionStatus.None
 
@@ -76,17 +85,13 @@ class ContactListFragment :
         ActivityResultContracts.RequestPermission(),
     ) { _ -> }
 
-    private var backupFileNameHint = "something_is_broken.tox"
-
     private var passwordDialog: AlertDialog? = null
     private var contactActionMode: ActionMode? = null
     private val selectedContacts = linkedSetOf<String>()
-
-    private val exportToxSaveLauncher =
-        registerForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { dest ->
-            if (dest == null) return@registerForActivityResult
-            viewModel.saveToxBackupTo(dest)
-        }
+    private lateinit var contactAdapter: ContactAdapter
+    private var allContacts: List<Contact> = emptyList()
+    private var allFriendRequests: List<FriendRequest> = emptyList()
+    private var listMode = ContactListMode.Inbox
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val v = super.onCreateView(inflater, container, savedInstanceState)
@@ -129,11 +134,18 @@ class ContactListFragment :
         toolbar.setOnMenuItemClickListener {
             onNavigationItemSelected(it)
         }
+        arguments?.getString(ARG_CONTACT_LIST_MODE)?.let { mode ->
+            listMode = when (mode) {
+                CONTACT_LIST_MODE_ARCHIVED -> ContactListMode.Archived
+                CONTACT_LIST_MODE_BLOCKED -> ContactListMode.Blocked
+                else -> ContactListMode.Inbox
+            }
+            arguments?.remove(ARG_CONTACT_LIST_MODE)
+        }
+        updateListModeUi()
 
         viewModel.user.observe(viewLifecycleOwner) { user ->
             if (user == null) return@observe
-
-            backupFileNameHint = user.name + ".tox"
 
             navHeader!!.apply {
                 profileName.text = user.name
@@ -152,7 +164,7 @@ class ContactListFragment :
 
         navView.setNavigationItemSelectedListener(this@ContactListFragment)
 
-        val contactAdapter = ContactAdapter(layoutInflater, requireContext())
+        contactAdapter = ContactAdapter(layoutInflater, requireContext())
         contactList.adapter = contactAdapter
         registerForContextMenu(contactList)
         val emptyConversationsView = noConversationsView
@@ -162,25 +174,13 @@ class ContactListFragment :
         emptyConversationsView.setIsVerticallyCentered(true)
 
         viewModel.friendRequests.observe(viewLifecycleOwner) { friendRequests ->
-            contactAdapter.friendRequests = friendRequests
-            contactAdapter.notifyDataSetChanged()
-
-            emptyConversationsView.visibility = if (contactAdapter.isEmpty) {
-                View.VISIBLE
-            } else {
-                View.GONE
-            }
+            allFriendRequests = friendRequests
+            refreshContactList()
         }
 
         viewModel.contacts.observe(viewLifecycleOwner) { contacts ->
-            contactAdapter.contacts = contacts.sortedByDescending(::contactListSorter)
-            contactAdapter.notifyDataSetChanged()
-
-            emptyConversationsView.visibility = if (contactAdapter.isEmpty) {
-                View.VISIBLE
-            } else {
-                View.GONE
-            }
+            allContacts = contacts
+            refreshContactList()
         }
 
         contactList.setOnItemClickListener { _, _, position, _ ->
@@ -227,7 +227,15 @@ class ContactListFragment :
                 contactActionMode?.finish()
                 return@addCallback
             }
-            activity?.finish()
+            if (listMode != ContactListMode.Inbox) {
+                listMode = ContactListMode.Inbox
+                updateListModeUi()
+                refreshContactList()
+                return@addCallback
+            }
+            if (!findNavController().popBackStack()) {
+                activity?.finish()
+            }
         }
 
         arguments?.getString(ARG_ADD_CONTACT)?.let { toxId ->
@@ -340,7 +348,11 @@ class ContactListFragment :
             }
             R.id.add_contact -> findNavController().navigate(R.id.action_contactListFragment_to_addContactFragment)
             R.id.settings -> findNavController().navigate(R.id.action_contactListFragment_to_settingsFragment)
-            R.id.export_tox_save -> exportToxSaveLauncher.launch(backupFileNameHint)
+            R.id.show_archived -> {
+                listMode = if (listMode == ContactListMode.Archived) ContactListMode.Inbox else ContactListMode.Archived
+                updateListModeUi()
+                refreshContactList()
+            }
             R.id.quit_tox -> {
                 if (!viewModel.quittingNeedsConfirmation()) {
                     viewModel.quitTox()
@@ -372,6 +384,10 @@ class ContactListFragment :
                     mode.title = null
                     mode.subtitle = null
                     mode.menuInflater.inflate(R.menu.contact_list_action_mode_menu, menu)
+                    updateArchiveActionTitle(mode)
+                    updateNotificationActionTitle(mode)
+                    updateBlockActionTitle(mode)
+                    binding.toolbar.visibility = View.GONE
                     (host.findViewById<View?>(androidx.appcompat.R.id.action_mode_bar)
                         ?: host.findViewById(androidx.appcompat.R.id.action_bar))
                         ?.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.ui_white))
@@ -413,7 +429,56 @@ class ContactListFragment :
                                 true
                             }
                         }
-                        R.id.action_archive, R.id.action_notification_off, R.id.action_add_contact, R.id.action_block -> {
+                        R.id.action_notification_off -> {
+                            val targets = viewModel.contacts.value.orEmpty()
+                                .filter { selectedContacts.contains(it.publicKey) }
+                            if (targets.isEmpty()) {
+                                mode.finish()
+                                return true
+                            }
+
+                            val shouldMute = !targets.all { viewModel.isMuted(PublicKey(it.publicKey)) }
+                            targets.forEach { viewModel.setMuted(PublicKey(it.publicKey), shouldMute) }
+                            contactAdapter.notifyDataSetChanged()
+                            updateNotificationActionTitle(mode)
+                            true
+                        }
+                        R.id.action_archive -> {
+                            val targets = viewModel.contacts.value.orEmpty()
+                                .filter { selectedContacts.contains(it.publicKey) }
+                            if (targets.isEmpty()) {
+                                mode.finish()
+                                return true
+                            }
+                            val shouldArchive = !targets.all { it.archived }
+                            targets.forEach { viewModel.setArchived(PublicKey(it.publicKey), shouldArchive) }
+                            Toast.makeText(
+                                requireContext(),
+                                getString(if (shouldArchive) R.string.conversation_archived else R.string.conversation_unarchived),
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                            mode.finish()
+                            true
+                        }
+                        R.id.action_block -> {
+                            val targets = viewModel.contacts.value.orEmpty()
+                                .filter { selectedContacts.contains(it.publicKey) }
+                            if (targets.isEmpty()) {
+                                mode.finish()
+                                return true
+                            }
+                            val shouldBlock = !targets.all { viewModel.isBlocked(PublicKey(it.publicKey)) }
+                            targets.forEach { viewModel.setBlocked(PublicKey(it.publicKey), shouldBlock) }
+                            Toast.makeText(
+                                requireContext(),
+                                getString(if (shouldBlock) R.string.conversation_blocked else R.string.conversation_unblocked),
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                            refreshContactList()
+                            mode.finish()
+                            true
+                        }
+                        R.id.action_add_contact -> {
                             Toast.makeText(requireContext(), R.string.action_not_supported, Toast.LENGTH_SHORT).show()
                             true
                         }
@@ -425,7 +490,12 @@ class ContactListFragment :
                     selectedContacts.clear()
                     contactAdapter.selectedPublicKeys = emptySet()
                     contactAdapter.notifyDataSetChanged()
-                    binding.startNewConversationButton.visibility = View.VISIBLE
+                    binding.toolbar.visibility = View.VISIBLE
+                    binding.startNewConversationButton.visibility = if (listMode == ContactListMode.Inbox) {
+                        View.VISIBLE
+                    } else {
+                        View.GONE
+                    }
                     if (contactActionMode === mode) {
                         contactActionMode = null
                     }
@@ -447,6 +517,78 @@ class ContactListFragment :
 
         contactAdapter.selectedPublicKeys = selectedContacts
         contactAdapter.notifyDataSetChanged()
+        contactActionMode?.let {
+            updateNotificationActionTitle(it)
+            updateArchiveActionTitle(it)
+            updateBlockActionTitle(it)
+        }
+    }
+
+    private fun updateNotificationActionTitle(mode: ActionMode) {
+        val targets = viewModel.contacts.value.orEmpty().filter { selectedContacts.contains(it.publicKey) }
+        val allMuted = targets.isNotEmpty() && targets.all { viewModel.isMuted(PublicKey(it.publicKey)) }
+        mode.menu.findItem(R.id.action_notification_off)?.apply {
+            title = getString(if (allMuted) R.string.action_notification_on else R.string.action_notification_off)
+            setIcon(if (allMuted) R.drawable.ic_notifications_on_dark else R.drawable.ic_notifications_off_dark)
+            icon?.mutate()?.setTint(ContextCompat.getColor(requireContext(), R.color.ui_icon_dark))
+        }
+    }
+
+    private fun updateArchiveActionTitle(mode: ActionMode) {
+        val targets = viewModel.contacts.value.orEmpty().filter { selectedContacts.contains(it.publicKey) }
+        val allArchived = targets.isNotEmpty() && targets.all { it.archived }
+        mode.menu.findItem(R.id.action_archive)?.title = getString(
+            if (allArchived) R.string.action_unarchive else R.string.action_archive,
+        )
+    }
+
+    private fun updateBlockActionTitle(mode: ActionMode) {
+        val targets = viewModel.contacts.value.orEmpty().filter { selectedContacts.contains(it.publicKey) }
+        val allBlocked = targets.isNotEmpty() && targets.all { viewModel.isBlocked(PublicKey(it.publicKey)) }
+        mode.menu.findItem(R.id.action_block)?.apply {
+            title = getString(if (allBlocked) R.string.action_unblock else R.string.action_block)
+            icon?.mutate()?.setTint(ContextCompat.getColor(requireContext(), R.color.ui_icon_dark))
+        }
+    }
+
+    private fun refreshContactList() {
+        val blocked = viewModel.blockedKeys()
+        contactAdapter.friendRequests = if (listMode == ContactListMode.Inbox) allFriendRequests else emptyList()
+        contactAdapter.contacts = allContacts
+            .asSequence()
+            .filter {
+                when (listMode) {
+                    ContactListMode.Inbox -> !it.archived && it.publicKey !in blocked
+                    ContactListMode.Archived -> it.archived && it.publicKey !in blocked
+                    ContactListMode.Blocked -> it.publicKey in blocked
+                }
+            }
+            .sortedWith(
+                compareByDescending<Contact> { it.starred }
+                    .thenByDescending { contactListSorter(it) },
+            )
+            .toList()
+        contactAdapter.notifyDataSetChanged()
+        binding.noConversationsView.setTextHint(when (listMode) {
+            ContactListMode.Inbox -> R.string.conversation_list_empty_text
+            ContactListMode.Archived -> R.string.archived_empty_text
+            ContactListMode.Blocked -> R.string.blocked_empty_text
+        })
+        binding.noConversationsView.visibility = if (contactAdapter.isEmpty) View.VISIBLE else View.GONE
+    }
+
+    private fun updateListModeUi() {
+        binding.toolbar.menu.findItem(R.id.show_archived)?.title = getString(
+            if (listMode == ContactListMode.Archived) R.string.show_inbox else R.string.show_archived,
+        )
+        binding.toolbar.title = getString(
+            when (listMode) {
+                ContactListMode.Inbox -> R.string.conversation_list_title
+                ContactListMode.Archived -> R.string.archived_conversations_title
+                ContactListMode.Blocked -> R.string.blocked_conversations_title
+            },
+        )
+        binding.startNewConversationButton.visibility = if (listMode == ContactListMode.Inbox) View.VISIBLE else View.GONE
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

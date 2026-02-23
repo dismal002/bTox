@@ -7,12 +7,15 @@ package com.dismal.btox.ui.settings
 import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import java.io.File
+import java.io.FileNotFoundException
+import java.io.FileOutputStream
 import javax.inject.Inject
 import kotlin.math.max
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +23,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.dismal.btox.R
 import com.dismal.btox.settings.BootstrapNodeSource
 import com.dismal.btox.settings.FtAutoAccept
 import com.dismal.btox.settings.AppLockMode
@@ -122,6 +126,16 @@ class SettingsViewModel @Inject constructor(
         settings.confirmCalling = enabled
     }
 
+    fun getOutgoingMessageSoundsEnabled(): Boolean = settings.outgoingMessageSoundsEnabled
+    fun setOutgoingMessageSoundsEnabled(enabled: Boolean) {
+        settings.outgoingMessageSoundsEnabled = enabled
+    }
+
+    fun getNfcFriendAddEnabled(): Boolean = settings.nfcFriendAddEnabled
+    fun setNfcFriendAddEnabled(enabled: Boolean) {
+        settings.nfcFriendAddEnabled = enabled
+    }
+
     fun getAutoAwaySeconds() = settings.autoAwaySeconds
     fun setAutoAwaySeconds(seconds: Long) {
         settings.autoAwaySeconds = seconds
@@ -142,6 +156,27 @@ class SettingsViewModel @Inject constructor(
             }
             toxStarter.tryLoadTox(password)
             _committed.value = true
+        }
+    }
+
+    fun saveToxBackupTo(uri: Uri) = viewModelScope.launch(Dispatchers.IO) {
+        try {
+            resolver.openFileDescriptor(uri, "w")!!.use { fd ->
+                FileOutputStream(fd.fileDescriptor).use { out ->
+                    out.write(tox.getSaveData())
+                }
+            }
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, context.getText(R.string.tox_save_exported), Toast.LENGTH_LONG).show()
+            }
+        } catch (_: FileNotFoundException) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.tox_save_export_failure, context.getString(R.string.file_not_found)),
+                    Toast.LENGTH_LONG,
+                ).show()
+            }
         }
     }
 

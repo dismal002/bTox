@@ -12,7 +12,11 @@ import ltd.evilcorp.core.vo.Contact
 import ltd.evilcorp.core.vo.PublicKey
 import ltd.evilcorp.domain.feature.ContactManager
 
-class ContactProfileViewModel @Inject constructor(contactManager: ContactManager) : ViewModel() {
+class ContactProfileViewModel @Inject constructor(private val contactManager: ContactManager) : ViewModel() {
     var publicKey: PublicKey = PublicKey("")
     val contact: LiveData<Contact?> by lazy { contactManager.get(publicKey).asLiveData() }
+
+    fun setStarred(starred: Boolean) {
+        contactManager.setStarred(publicKey, starred)
+    }
 }

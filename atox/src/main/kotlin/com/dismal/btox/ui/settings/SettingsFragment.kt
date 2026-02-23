@@ -27,7 +27,9 @@ import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.viewModels
+import androidx.core.os.bundleOf
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.navOptions
 import java.lang.NumberFormatException
 import kotlin.math.max
 import kotlinx.coroutines.CoroutineScope
@@ -41,6 +43,8 @@ import com.dismal.btox.settings.AppLockMode
 import com.dismal.btox.settings.BootstrapNodeSource
 import com.dismal.btox.settings.FtAutoAccept
 import com.dismal.btox.ui.BaseFragment
+import com.dismal.btox.ui.contactlist.ARG_CONTACT_LIST_MODE
+import com.dismal.btox.ui.contactlist.CONTACT_LIST_MODE_BLOCKED
 import com.dismal.btox.vmFactory
 import ltd.evilcorp.domain.tox.ProxyType
 
@@ -54,6 +58,11 @@ private fun Spinner.onItemSelectedListener(callback: (Int) -> Unit) {
 }
 
 class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsBinding::inflate) {
+    private companion object {
+        const val ARG_SETTINGS_MODE = "settings_mode"
+        const val SETTINGS_MODE_ADVANCED = "advanced"
+    }
+
     private val vm: SettingsViewModel by viewModels { vmFactory }
     private val scope = CoroutineScope(Dispatchers.Default)
     private var suppressAppLockSelection = false
@@ -90,6 +99,12 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
         }
     }
 
+    private val exportToxSaveLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { uri ->
+        if (uri != null) {
+            vm.saveToxBackupTo(uri)
+        }
+    }
+
     override fun onAttach(context: Context) {
         super.onAttach(context)
         requireActivity().onBackPressedDispatcher.addCallback(this, applySettingsCallback)
@@ -97,6 +112,8 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) = binding.run {
+        val advancedMode = arguments?.getString(ARG_SETTINGS_MODE) == SETTINGS_MODE_ADVANCED
+
         ViewCompat.setOnApplyWindowInsetsListener(view) { v, compat ->
             val bars = compat.getInsets(WindowInsetsCompat.Type.systemBars())
             val gestures = compat.getInsets(WindowInsetsCompat.Type.systemGestures())
@@ -110,6 +127,7 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
         toolbar.apply {
             setNavigationIcon(R.drawable.ic_back)
             inflateMenu(R.menu.settings_overflow_menu)
+            title = getString(if (advancedMode) R.string.pref_heading_advanced else R.string.settings)
             setNavigationOnClickListener {
                 WindowInsetsControllerCompat(requireActivity().window, view)
                     .hide(WindowInsetsCompat.Type.ime())
@@ -126,17 +144,29 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
             }
         }
 
-        fun setAdvancedVisible(visible: Boolean) {
-            settingsNetworkGroup.isVisible = visible
-            settingsProxyGroup.isVisible = visible
-            settingsPasswordGroup.isVisible = visible
-            settingsAdvancedGroup.isVisible = visible
-            advancedToggleText.text = getString(if (visible) R.string.hide_advanced else R.string.show_advanced)
-            advancedChevron.rotation = if (visible) 90f else 0f
-        }
-        setAdvancedVisible(false)
-        advancedToggleRow.setOnClickListener {
-            setAdvancedVisible(!settingsNetworkGroup.isVisible)
+        settingsGeneralGroup.isVisible = !advancedMode
+        settingsNetworkGroup.isVisible = advancedMode
+        settingsProxyGroup.isVisible = advancedMode
+        settingsPasswordGroup.isVisible = advancedMode
+        settingsAdvancedGroup.isVisible = advancedMode
+        version.isVisible = !advancedMode
+
+        if (advancedMode) {
+            advancedToggleRow.isVisible = false
+        } else {
+            blockedConversationsRow.setOnClickListener {
+                findNavController().navigate(
+                    R.id.contactListFragment,
+                    bundleOf(ARG_CONTACT_LIST_MODE to CONTACT_LIST_MODE_BLOCKED),
+                    navOptions {
+                        popUpTo(R.id.contactListFragment) { inclusive = false }
+                        launchSingleTop = true
+                    },
+                )
+            }
+            advancedToggleRow.setOnClickListener {
+                findNavController().navigate(R.id.action_settingsFragment_to_advancedSettingsFragment)
+            }
         }
 
         theme.adapter = ArrayAdapter.createFromResource(
@@ -230,6 +260,16 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
 
         settingConfirmCalling.isChecked = vm.getConfirmCalling()
         settingConfirmCalling.setOnCheckedChangeListener { _, isChecked -> vm.setConfirmCalling(isChecked) }
+
+        settingOutgoingMessageSounds.isChecked = vm.getOutgoingMessageSoundsEnabled()
+        settingOutgoingMessageSounds.setOnCheckedChangeListener { _, isChecked ->
+            vm.setOutgoingMessageSoundsEnabled(isChecked)
+        }
+
+        settingNfcFriendAdd.isChecked = vm.getNfcFriendAddEnabled()
+        settingNfcFriendAdd.setOnCheckedChangeListener { _, isChecked ->
+            vm.setNfcFriendAddEnabled(isChecked)
+        }
 
         if (vm.getProxyType() != ProxyType.None) {
             vm.setUdpEnabled(false)
@@ -374,6 +414,10 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
             } else {
                 requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
             }
+        }
+
+        exportToxSaveRow.setOnClickListener {
+            exportToxSaveLauncher.launch("btox-profile.tox")
         }
 
         version.text = getString(R.string.version_display, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE)

@@ -131,18 +131,20 @@
             android:layout_marginHorizontal="6dp"
             android:layout_marginTop="6dp"
             android:layout_marginBottom="6dp"
-            android:background="@color/mg_chat_surface"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             app:layout_constraintBottom_toBottomOf="parent">
 
         <ImageButton android:id="@+id/attach"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginEnd="6dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
                 android:background="@android:color/transparent"
                 android:contentDescription="@string/attach_file"
-                android:padding="8dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="@dimen/compose_message_attachment_padding_topBottom"
+                android:paddingBottom="@dimen/compose_message_attachment_padding_topBottom"
                 android:src="@drawable/ic_attachment_dark"
                 android:tint="@color/mg_icon_tint"/>
 
@@ -154,23 +156,30 @@
                 android:hint="@string/message"
                 android:importantForAutofill="no"
                 android:inputType="textMultiLine|textCapSentences"
-                android:maxLines="6"
+                android:imeOptions="actionSend|flagNoEnterAction|flagNoExtractUi"
+                android:maxLines="5"
                 android:maxHeight="256dp"
                 android:minHeight="40dp"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="8dp"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="6dp"
                 android:textColor="@color/mg_text_primary"
                 android:textColorHint="@color/mg_text_hint"
                 tools:targetApi="26"/>
 
-        <ImageButton android:id="@+id/send"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="8dp"
-                android:background="@drawable/send_arrow_background"
-                android:contentDescription="@string/send"
-                android:padding="8dp"
-                android:src="@drawable/ic_send_light"
-                android:visibility="gone"/>
+        <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top"
+                android:layout_marginStart="8dp">
+
+            <ImageButton android:id="@+id/send"
+                    android:layout_width="@dimen/conversation_message_contact_icon_size"
+                    android:layout_height="@dimen/conversation_message_contact_icon_size"
+                    android:background="@drawable/send_arrow_background"
+                    android:contentDescription="@string/send"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_send_light"
+                    android:visibility="gone"/>
+        </FrameLayout>
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

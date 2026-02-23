@@ -4,19 +4,19 @@
     <color name="color_filter_base_color">#66000000</color>
     <color name="fastscroll_thumb_color">#FF9E9E9E</color>
     <color name="compose_message_icon">#FFFFFFFF</color>
-    <color name="compose_message_send_color">#FF4CAF50</color>
-    <color name="compose_message_send_color_pressed">#FF3C9A42</color>
+    <color name="compose_message_send_color">#FF689F38</color>
+    <color name="compose_message_send_color_pressed">#FF537F2D</color>
     <color name="subject_editor_bubble">#FFF5F5F5</color>
     <!-- Message bubble palette -->
-    <color name="message_bubble_incoming_bg">#FF61B54A</color>
+    <color name="message_bubble_incoming_bg">#FF689F38</color>
     <color name="message_bubble_outgoing_bg">#FFFFFFFF</color>
     <!-- Top bar for mg chat -->
-    <color name="mg_top_bar_bg">#FF4CAF50</color>
+    <color name="mg_top_bar_bg">#FF689F38</color>
     <!-- AOSP Contacts detail palette -->
-    <color name="aosp_contact_primary">#FF4CAF50</color>
-    <color name="aosp_contact_primary_dark">#FF388E3C</color>
+    <color name="aosp_contact_primary">#FF689F38</color>
+    <color name="aosp_contact_primary_dark">#FF537F2D</color>
     <color name="aosp_contact_background">#FFF5F5F5</color>
-    <color name="aosp_contact_card_header_text">#FF4CAF50</color>
+    <color name="aosp_contact_card_header_text">#FF689F38</color>
     <color name="aosp_contact_secondary_text">#FF6D6D6D</color>
     <!-- AOSP Dialer in-call palette -->
     <color name="dialer_incall_gradient_top">#E91141BB</color>
@@ -32,5 +32,5 @@
     <color name="ui_text_white_80">#CCFFFFFF</color>
     <color name="ui_white_ripple_50">#80FFFFFF</color>
     <color name="dialer_end_call_red">#FFDF0000</color>
-    <color name="message_bubble_green">#FF61B54A</color>
+    <color name="message_bubble_green">#FF689F38</color>
 </resources>

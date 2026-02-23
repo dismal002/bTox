@@ -123,4 +123,30 @@ class ContactListViewModel @Inject constructor(
     }
 
     fun onShareText(what: String, to: Contact) = chatManager.sendMessage(PublicKey(to.publicKey), what)
+
+    fun isMuted(publicKey: PublicKey): Boolean = settings.isContactMuted(publicKey)
+
+    fun setMuted(publicKey: PublicKey, muted: Boolean) {
+        settings.setContactMuted(publicKey, muted)
+        if (muted) {
+            notificationHelper.dismissNotifications(publicKey)
+        }
+    }
+
+    fun setArchived(publicKey: PublicKey, archived: Boolean) {
+        contactManager.setArchived(publicKey, archived)
+    }
+
+    fun isBlocked(publicKey: PublicKey): Boolean = settings.isContactBlocked(publicKey)
+
+    fun setBlocked(publicKey: PublicKey, blocked: Boolean) {
+        settings.setContactBlocked(publicKey, blocked)
+        if (blocked) {
+            setMuted(publicKey, true)
+            notificationHelper.dismissNotifications(publicKey)
+            notificationHelper.dismissCallNotification(publicKey)
+        }
+    }
+
+    fun blockedKeys(): Set<String> = settings.getBlockedContactKeys()
 }

@@ -1,25 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/friendRequestItem"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="10dp">
-    <TextView android:id="@+id/publicKey"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:gravity="start"
-            android:singleLine="true"
-            android:textStyle="bold"
-            tools:text="public key goes here"/>
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/friendRequestItem"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="80dp"
+    android:background="?android:attr/selectableItemBackground"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="10dp">
 
-    <TextView android:id="@+id/message"
-            android:layout_width="wrap_content"
+    <ImageView
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="@drawable/incoming_avatar_bg"
+        android:contentDescription="@null"
+        android:padding="12dp"
+        android:src="@drawable/ic_person_avatar"
+        android:tint="@android:color/white" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/publicKey"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ellipsize="end"
-            android:gravity="start"
             android:singleLine="true"
-            tools:text="message goes here"/>
+            android:textColor="@color/mg_text_primary"
+            android:textSize="16sp"
+            android:textStyle="normal"
+            tools:text="D68EBFEE00F4C074..." />
+
+        <TextView
+            android:id="@+id/message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textColor="@color/mg_text_secondary"
+            android:textSize="14sp"
+            tools:text="Please add me." />
+    </LinearLayout>
 </LinearLayout>

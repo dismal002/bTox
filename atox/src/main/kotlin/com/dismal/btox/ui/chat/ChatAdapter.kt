@@ -6,6 +6,7 @@ package com.dismal.btox.ui.chat
 
 import android.content.res.Resources
 import android.graphics.PorterDuff
+import android.text.format.DateUtils
 import android.text.format.Formatter
 import android.util.Log
 import android.view.Gravity
@@ -23,7 +24,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.squareup.picasso.Picasso
 import java.net.URLConnection
-import java.text.DateFormat
+import java.util.Calendar
 import java.util.Locale
 import kotlin.math.roundToInt
 import com.dismal.btox.R
@@ -68,8 +69,6 @@ private enum class ChatItemType {
     SentFileTransfer,
 }
 
-private val timeFormatter = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT)
-
 private class MessageViewHolder(row: View) {
     val message: TextView = row.findViewById(R.id.message)
     val timestamp: TextView = row.findViewById(R.id.timestamp)
@@ -96,6 +95,60 @@ class ChatAdapter(private val inflater: LayoutInflater, private val resources: R
     var messages: List<Message> = listOf()
     var fileTransfers: List<FileTransfer> = listOf()
     var activeContact: Contact? = null
+
+    private fun formatMessageTimestamp(timestamp: Long): CharSequence {
+        val context = inflater.context
+        val now = System.currentTimeMillis()
+        val diff = now - timestamp
+        val hourFlag = if (android.text.format.DateFormat.is24HourFormat(context)) {
+            @Suppress("deprecation")
+            DateUtils.FORMAT_24HOUR
+        } else {
+            @Suppress("deprecation")
+            DateUtils.FORMAT_12HOUR
+        }
+
+        if (diff < DateUtils.MINUTE_IN_MILLIS) {
+            return resources.getString(R.string.posted_now)
+        }
+        if (diff < DateUtils.HOUR_IN_MILLIS) {
+            val mins = (diff / DateUtils.MINUTE_IN_MILLIS).toInt()
+            return resources.getQuantityString(R.plurals.num_minutes_ago, mins, mins)
+        }
+
+        val thenCal = Calendar.getInstance().apply { timeInMillis = timestamp }
+        val nowCal = Calendar.getInstance()
+        val sameDay = thenCal.get(Calendar.YEAR) == nowCal.get(Calendar.YEAR) &&
+            thenCal.get(Calendar.DAY_OF_YEAR) == nowCal.get(Calendar.DAY_OF_YEAR)
+        if (sameDay) {
+            return DateUtils.formatDateTime(context, timestamp, DateUtils.FORMAT_SHOW_TIME or hourFlag)
+        }
+
+        if (diff < DateUtils.WEEK_IN_MILLIS) {
+            return DateUtils.formatDateTime(
+                context,
+                timestamp,
+                DateUtils.FORMAT_SHOW_WEEKDAY or DateUtils.FORMAT_ABBREV_WEEKDAY or
+                    DateUtils.FORMAT_SHOW_TIME or hourFlag,
+            )
+        }
+
+        if (diff < DateUtils.YEAR_IN_MILLIS) {
+            return DateUtils.formatDateTime(
+                context,
+                timestamp,
+                DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME or
+                    DateUtils.FORMAT_ABBREV_MONTH or DateUtils.FORMAT_NO_YEAR or hourFlag,
+            )
+        }
+
+        return DateUtils.formatDateTime(
+            context,
+            timestamp,
+            DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME or
+                DateUtils.FORMAT_NUMERIC_DATE or DateUtils.FORMAT_SHOW_YEAR or hourFlag,
+        )
+    }
 
     override fun getCount(): Int = messages.size
     override fun getItem(position: Int): Any = messages[position]
@@ -142,27 +195,30 @@ class ChatAdapter(private val inflater: LayoutInflater, private val resources: R
                     activeContact?.let { vh.incomingAvatar?.setFrom(it) }
                 }
                 // Messaging-goplay keeps bubble geometry from red 9-patch assets and tints them at runtime.
+                val bubble = vh.message.parent as? View
                 when (type) {
                     ChatItemType.ReceivedMessage -> {
-                        vh.message.background?.mutate()?.setColorFilter(
+                        bubble?.background?.mutate()?.setColorFilter(
                             ContextCompat.getColor(inflater.context, R.color.message_bubble_incoming_bg),
                             PorterDuff.Mode.SRC_IN,
                         )
                         vh.message.setTextColor(ContextCompat.getColor(inflater.context, android.R.color.white))
                         vh.message.setLinkTextColor(ContextCompat.getColor(inflater.context, android.R.color.white))
+                        vh.timestamp.setTextColor(ContextCompat.getColor(inflater.context, R.color.timestamp_text_incoming))
                     }
                     ChatItemType.SentMessage -> {
-                        vh.message.background?.mutate()?.setColorFilter(
+                        bubble?.background?.mutate()?.setColorFilter(
                             ContextCompat.getColor(inflater.context, R.color.message_bubble_outgoing_bg),
                             PorterDuff.Mode.SRC_IN,
                         )
                         vh.message.setTextColor(ContextCompat.getColor(inflater.context, android.R.color.black))
                         vh.message.setLinkTextColor(ContextCompat.getColor(inflater.context, android.R.color.black))
+                        vh.timestamp.setTextColor(ContextCompat.getColor(inflater.context, R.color.timestamp_text_outgoing))
                     }
                     else -> Unit
                 }
                 vh.timestamp.text = if (!unsent) {
-                    timeFormatter.format(message.timestamp)
+                    formatMessageTimestamp(message.timestamp)
                 } else {
                     resources.getText(R.string.sending)
                 }
@@ -257,7 +313,7 @@ class ChatAdapter(private val inflater: LayoutInflater, private val resources: R
                 // TODO(robinlinden): paused, but that requires a database update and a release is overdue.
                 val stateId = if (fileTransfer.isRejected()) R.string.cancelled else R.string.completed
                 vh.state.text = resources.getString(stateId).lowercase(Locale.getDefault())
-                vh.timestamp.text = timeFormatter.format(message.timestamp)
+                vh.timestamp.text = formatMessageTimestamp(message.timestamp)
 
                 vh.timestamp.visibility = if (position == messages.lastIndex) {
                     View.VISIBLE

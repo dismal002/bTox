@@ -14,6 +14,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import androidx.core.net.toUri
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import com.dismal.btox.R
@@ -98,6 +99,12 @@ class EventListenerCallbacks @Inject constructor(
             contactRepository.setConnectionStatus(publicKey, status)
             if (status != ConnectionStatus.None) {
                 scope.launch {
+                    userRepository.get(tox.publicKey.string()).firstOrNull()?.let { self ->
+                        if (self.avatarUri.isNotBlank()) {
+                            fileTransferManager.createAvatar(PublicKey(publicKey), self.avatarUri.toUri())
+                        }
+                    }
+
                     val pending = messageRepository.getPending(publicKey)
                     if (pending.isNotEmpty()) {
                         chatManager.resend(pending)

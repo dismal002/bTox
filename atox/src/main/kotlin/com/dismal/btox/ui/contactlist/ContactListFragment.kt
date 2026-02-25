@@ -41,6 +41,7 @@ import com.dismal.btox.databinding.ContactListViewItemBinding
 import com.dismal.btox.databinding.FragmentContactListBinding
 import com.dismal.btox.databinding.FriendRequestItemBinding
 import com.dismal.btox.databinding.NavHeaderContactListBinding
+import com.dismal.btox.settings.AppColorResolver
 import com.dismal.btox.hasPermission
 import com.dismal.btox.truncated
 import com.dismal.btox.ui.BaseFragment
@@ -92,6 +93,7 @@ class ContactListFragment :
     private var allContacts: List<Contact> = emptyList()
     private var allFriendRequests: List<FriendRequest> = emptyList()
     private var listMode = ContactListMode.Inbox
+    private var useMaterial3Ui = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val v = super.onCreateView(inflater, container, savedInstanceState)
@@ -107,11 +109,15 @@ class ContactListFragment :
             }
         }
 
+        useMaterial3Ui = viewModel.useMaterial3Ui()
+        setStartConversationFabVisible(listMode == ContactListMode.Inbox)
+        val activeFab = if (useMaterial3Ui) startNewConversationButtonM3 else startNewConversationButton
+
         val baseListPaddingBottom = contactList.paddingBottom
         val baseFabMarginBottom =
-            (startNewConversationButton.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
+            (activeFab.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
         val baseFabMarginEnd =
-            (startNewConversationButton.layoutParams as ViewGroup.MarginLayoutParams).marginEnd
+            (activeFab.layoutParams as ViewGroup.MarginLayoutParams).marginEnd
 
         ViewCompat.setOnApplyWindowInsetsListener(view) { _, compat ->
             val bars = compat.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -122,7 +128,7 @@ class ContactListFragment :
             toolbar.updatePadding(left = bars.left, right = bars.right)
             navView.updatePadding(left = bars.left)
             contactList.updatePadding(left = bars.left, right = bars.right, bottom = baseListPaddingBottom + bottomInset)
-            startNewConversationButton.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+            activeFab.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                 bottomMargin = baseFabMarginBottom + bottomInset
                 marginEnd = baseFabMarginEnd + bars.right
             }
@@ -134,6 +140,8 @@ class ContactListFragment :
         toolbar.setOnMenuItemClickListener {
             onNavigationItemSelected(it)
         }
+        AppColorResolver.applyToToolbar(toolbar)
+        AppColorResolver.applyToFab(if (useMaterial3Ui) startNewConversationButtonM3 else startNewConversationButton)
         arguments?.getString(ARG_CONTACT_LIST_MODE)?.let { mode ->
             listMode = when (mode) {
                 CONTACT_LIST_MODE_ARCHIVED -> ContactListMode.Archived
@@ -157,6 +165,7 @@ class ContactListFragment :
                 } else {
                     statusIndicator.setColorFilter(R.color.statusOffline)
                 }
+                root.setBackgroundColor(AppColorResolver.primary(requireContext()))
             }
 
             toolbar.subtitle = null
@@ -216,7 +225,7 @@ class ContactListFragment :
             true
         }
 
-        startNewConversationButton.setOnClickListener {
+        activeFab.setOnClickListener {
             findNavController().navigate(R.id.addContactFragment)
         }
 
@@ -491,18 +500,14 @@ class ContactListFragment :
                     contactAdapter.selectedPublicKeys = emptySet()
                     contactAdapter.notifyDataSetChanged()
                     binding.toolbar.visibility = View.VISIBLE
-                    binding.startNewConversationButton.visibility = if (listMode == ContactListMode.Inbox) {
-                        View.VISIBLE
-                    } else {
-                        View.GONE
-                    }
+                    setStartConversationFabVisible(listMode == ContactListMode.Inbox)
                     if (contactActionMode === mode) {
                         contactActionMode = null
                     }
                 }
             },
         )
-        binding.startNewConversationButton.visibility = View.GONE
+        setStartConversationFabVisible(false)
     }
 
     private fun toggleContactSelection(contact: Contact, contactAdapter: ContactAdapter) {
@@ -588,7 +593,13 @@ class ContactListFragment :
                 ContactListMode.Blocked -> R.string.blocked_conversations_title
             },
         )
-        binding.startNewConversationButton.visibility = if (listMode == ContactListMode.Inbox) View.VISIBLE else View.GONE
+        setStartConversationFabVisible(listMode == ContactListMode.Inbox)
+    }
+
+    private fun setStartConversationFabVisible(visible: Boolean) {
+        val value = if (visible) View.VISIBLE else View.GONE
+        binding.startNewConversationButton.visibility = if (useMaterial3Ui) View.GONE else value
+        binding.startNewConversationButtonM3.visibility = if (useMaterial3Ui) value else View.GONE
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

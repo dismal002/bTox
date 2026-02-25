@@ -6,6 +6,7 @@
 package com.dismal.btox.ui.settings
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.text.InputType
 import android.text.method.LinkMovementMethod
@@ -30,6 +31,7 @@ import androidx.fragment.app.viewModels
 import androidx.core.os.bundleOf
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
+import androidx.appcompat.widget.SwitchCompat
 import java.lang.NumberFormatException
 import kotlin.math.max
 import kotlinx.coroutines.CoroutineScope
@@ -42,6 +44,8 @@ import com.dismal.btox.databinding.FragmentSettingsBinding
 import com.dismal.btox.settings.AppLockMode
 import com.dismal.btox.settings.BootstrapNodeSource
 import com.dismal.btox.settings.FtAutoAccept
+import com.dismal.btox.settings.UiStyleMode
+import com.dismal.btox.ui.colorpicker.ColorPickerDialog
 import com.dismal.btox.ui.BaseFragment
 import com.dismal.btox.ui.contactlist.ARG_CONTACT_LIST_MODE
 import com.dismal.btox.ui.contactlist.CONTACT_LIST_MODE_BLOCKED
@@ -154,6 +158,7 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
         if (advancedMode) {
             advancedToggleRow.isVisible = false
         } else {
+            moveThemeRowNearBottom()
             blockedConversationsRow.setOnClickListener {
                 findNavController().navigate(
                     R.id.contactListFragment,
@@ -178,6 +183,45 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
         theme.onItemSelectedListener {
             vm.setTheme(it)
         }
+
+        uiStyle.adapter = ArrayAdapter.createFromResource(
+            requireContext(),
+            R.array.pref_ui_style_options,
+            R.layout.settings_spinner_item,
+        ).apply { setDropDownViewResource(R.layout.settings_spinner_dropdown_item) }
+        uiStyle.setSelection(vm.getUiStyleMode().ordinal)
+        applyUiStyleSwitches(vm.getUiStyleMode())
+        uiStyle.onItemSelectedListener { position ->
+            val target = UiStyleMode.entries[position]
+            if (vm.getUiStyleMode() != target) {
+                vm.setUiStyleMode(target)
+                requireActivity().recreate()
+            }
+        }
+
+        fun updateAppColorPreview() {
+            val color = vm.getAppColorValue()
+            appColorPreview.backgroundTintList = ColorStateList.valueOf(color)
+            appColorValue.text = String.format("#%06X", 0xFFFFFF and color)
+        }
+
+        appColorRow.setOnClickListener {
+            val colors = vm.getAvailableAppColors()
+            val picker = ColorPickerDialog.newInstance(
+                R.string.pref_heading_app_color,
+                colors,
+                vm.getAppColorValue(),
+                6,
+                ColorPickerDialog.SIZE_SMALL,
+            )
+            picker.setOnColorSelectedListener { pickedColor ->
+                vm.setAppColorValue(pickedColor)
+                updateAppColorPreview()
+                requireActivity().recreate()
+            }
+            picker.show(parentFragmentManager, "app_color_picker")
+        }
+        updateAppColorPreview()
 
         fun updateAppPasswordUi() {
             val enabled = vm.getAppLockMode() == AppLockMode.AppPassword
@@ -468,6 +512,45 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
             }
         }
         dialog.show()
+    }
+
+    private fun moveThemeRowNearBottom() = binding.run {
+        val group = settingsGeneralGroup.getChildAt(0) as? LinearLayout ?: return
+        val rowIndex = group.indexOfChild(themeRow)
+        val dividerIndex = group.indexOfChild(themeDivider)
+        if (rowIndex < 0 || dividerIndex < 0) return
+        group.removeView(themeRow)
+        group.removeView(themeDivider)
+
+        val advancedIndex = group.indexOfChild(advancedToggleRow)
+        val insertIndex = if (advancedIndex > 0) advancedIndex - 1 else group.childCount
+        group.addView(themeDivider, insertIndex)
+        group.addView(themeRow, insertIndex + 1)
+    }
+
+    private fun applyUiStyleSwitches(mode: UiStyleMode) = binding.run {
+        val useMaterial = mode == UiStyleMode.Material3
+        val thumbTint = androidx.appcompat.content.res.AppCompatResources.getColorStateList(
+            requireContext(),
+            if (useMaterial) R.color.settings_switch_thumb_tint_m3 else R.color.settings_switch_thumb_tint,
+        )
+        val trackTint = androidx.appcompat.content.res.AppCompatResources.getColorStateList(
+            requireContext(),
+            if (useMaterial) R.color.settings_switch_track_tint_m3 else R.color.settings_switch_track_tint,
+        )
+        listOf<SwitchCompat>(
+            settingRunAtStartup,
+            settingAutoAwayEnabled,
+            settingConfirmQuitting,
+            settingConfirmCalling,
+            settingOutgoingMessageSounds,
+            settingNfcFriendAdd,
+            settingsUdpEnabled,
+            settingDisableScreenshots,
+        ).forEach { sw ->
+            sw.thumbTintList = thumbTint
+            sw.trackTintList = trackTint
+        }
     }
 
     private fun showAboutDialog() {

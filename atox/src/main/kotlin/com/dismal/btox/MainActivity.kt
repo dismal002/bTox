@@ -25,9 +25,14 @@ import androidx.core.os.bundleOf
 import androidx.core.view.WindowCompat
 import androidx.navigation.fragment.findNavController
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.Fragment
+import androidx.appcompat.widget.Toolbar
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import javax.inject.Inject
 import com.dismal.btox.di.ViewModelFactory
 import com.dismal.btox.settings.AppLockMode
+import com.dismal.btox.settings.AppColorResolver
 import com.dismal.btox.settings.Settings
 import com.dismal.btox.ui.contactlist.ARG_ADD_CONTACT
 import com.dismal.btox.ui.contactlist.ARG_SHARE
@@ -65,8 +70,27 @@ class MainActivity : AppCompatActivity() {
         (application as App).component.inject(this)
 
         AppCompatDelegate.setDefaultNightMode(settings.theme)
+        setTheme(settings.appThemeRes())
 
         super.onCreate(savedInstanceState)
+
+        supportFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
+            override fun onFragmentViewCreated(fm: FragmentManager, f: Fragment, v: View, savedInstanceState: Bundle?) {
+                super.onFragmentViewCreated(fm, f, v, savedInstanceState)
+                v.findViewById<Toolbar>(R.id.toolbar)?.let {
+                    AppColorResolver.applyToToolbar(it)
+                }
+                // Handle FABs if found (both classic and M3)
+                v.findViewById<View>(R.id.startNewConversationButton)?.let {
+                    AppColorResolver.applyToFab(it)
+                }
+                v.findViewById<View>(R.id.startNewConversationButtonM3)?.let {
+                    AppColorResolver.applyToFab(it)
+                }
+            }
+        }, true)
+
+        window.statusBarColor = AppColorResolver.primaryDark(this, R.color.colorPrimaryDark)
 
         if (settings.disableScreenshots) {
             window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)

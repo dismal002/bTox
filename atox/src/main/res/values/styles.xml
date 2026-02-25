@@ -3,6 +3,8 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorSurface">@color/mg_surface</item>
+        <item name="colorOnSurface">@color/mg_text_primary</item>
         <item name="actionModeBackground">@drawable/cab_bg_white</item>
         <item name="android:actionModeBackground">@drawable/cab_bg_white</item>
         <item name="actionModeCloseDrawable">@drawable/ic_cancel_small_dark</item>
@@ -10,6 +12,202 @@
 
         <item name="android:navigationBarColor">#B3777777</item>
         <item name="android:statusBarColor">@color/colorPrimaryDark</item>
+    </style>
+    <style name="AppTheme.Green" parent="AppTheme">
+        <item name="colorPrimary">#689F38</item>
+        <item name="colorPrimaryDark">#537F2D</item>
+        <item name="colorAccent">#689F38</item>
+        <item name="android:statusBarColor">#537F2D</item>
+    </style>
+    <style name="AppTheme.Blue" parent="AppTheme">
+        <item name="colorPrimary">#1E88E5</item>
+        <item name="colorPrimaryDark">#1565C0</item>
+        <item name="colorAccent">#1E88E5</item>
+        <item name="android:statusBarColor">#1565C0</item>
+    </style>
+    <style name="AppTheme.Teal" parent="AppTheme">
+        <item name="colorPrimary">#00897B</item>
+        <item name="colorPrimaryDark">#00695C</item>
+        <item name="colorAccent">#00897B</item>
+        <item name="android:statusBarColor">#00695C</item>
+    </style>
+    <style name="AppTheme.Orange" parent="AppTheme">
+        <item name="colorPrimary">#EF6C00</item>
+        <item name="colorPrimaryDark">#E65100</item>
+        <item name="colorAccent">#EF6C00</item>
+        <item name="android:statusBarColor">#E65100</item>
+    </style>
+    <style name="AppTheme.C0" parent="AppTheme.Green" />
+    <style name="AppTheme.C1" parent="AppTheme.Blue" />
+    <style name="AppTheme.C2" parent="AppTheme.Teal" />
+    <style name="AppTheme.C3" parent="AppTheme.Orange" />
+    <style name="AppTheme.C4" parent="AppTheme">
+        <item name="colorPrimary">#E53935</item>
+        <item name="colorPrimaryDark">#C62828</item>
+        <item name="colorAccent">#E53935</item>
+        <item name="android:statusBarColor">#C62828</item>
+    </style>
+    <style name="AppTheme.C5" parent="AppTheme">
+        <item name="colorPrimary">#D81B60</item>
+        <item name="colorPrimaryDark">#AD1457</item>
+        <item name="colorAccent">#D81B60</item>
+        <item name="android:statusBarColor">#AD1457</item>
+    </style>
+    <style name="AppTheme.C6" parent="AppTheme">
+        <item name="colorPrimary">#8E24AA</item>
+        <item name="colorPrimaryDark">#6A1B9A</item>
+        <item name="colorAccent">#8E24AA</item>
+        <item name="android:statusBarColor">#6A1B9A</item>
+    </style>
+    <style name="AppTheme.C7" parent="AppTheme">
+        <item name="colorPrimary">#3949AB</item>
+        <item name="colorPrimaryDark">#283593</item>
+        <item name="colorAccent">#3949AB</item>
+        <item name="android:statusBarColor">#283593</item>
+    </style>
+    <style name="AppTheme.C8" parent="AppTheme">
+        <item name="colorPrimary">#00ACC1</item>
+        <item name="colorPrimaryDark">#00838F</item>
+        <item name="colorAccent">#00ACC1</item>
+        <item name="android:statusBarColor">#00838F</item>
+    </style>
+    <style name="AppTheme.C9" parent="AppTheme">
+        <item name="colorPrimary">#7CB342</item>
+        <item name="colorPrimaryDark">#558B2F</item>
+        <item name="colorAccent">#7CB342</item>
+        <item name="android:statusBarColor">#558B2F</item>
+    </style>
+    <style name="AppTheme.C10" parent="AppTheme">
+        <item name="colorPrimary">#FFB300</item>
+        <item name="colorPrimaryDark">#FF8F00</item>
+        <item name="colorAccent">#FFB300</item>
+        <item name="android:statusBarColor">#FF8F00</item>
+    </style>
+    <style name="AppTheme.C11" parent="AppTheme">
+        <item name="colorPrimary">#F4511E</item>
+        <item name="colorPrimaryDark">#D84315</item>
+        <item name="colorAccent">#F4511E</item>
+        <item name="android:statusBarColor">#D84315</item>
+    </style>
+    <style name="AppTheme.C12" parent="AppTheme">
+        <item name="colorPrimary">#6D4C41</item>
+        <item name="colorPrimaryDark">#4E342E</item>
+        <item name="colorAccent">#6D4C41</item>
+        <item name="android:statusBarColor">#4E342E</item>
+    </style>
+    <style name="AppTheme.C13" parent="AppTheme">
+        <item name="colorPrimary">#546E7A</item>
+        <item name="colorPrimaryDark">#37474F</item>
+        <item name="colorAccent">#546E7A</item>
+        <item name="android:statusBarColor">#37474F</item>
+    </style>
+    <style name="AppTheme.C14" parent="AppTheme">
+        <item name="colorPrimary">#2E7D32</item>
+        <item name="colorPrimaryDark">#1B5E20</item>
+        <item name="colorAccent">#2E7D32</item>
+        <item name="android:statusBarColor">#1B5E20</item>
+    </style>
+    <style name="AppTheme.C15" parent="AppTheme">
+        <item name="colorPrimary">#0277BD</item>
+        <item name="colorPrimaryDark">#01579B</item>
+        <item name="colorAccent">#0277BD</item>
+        <item name="android:statusBarColor">#01579B</item>
+    </style>
+    <style name="AppTheme.C16" parent="AppTheme">
+        <item name="colorPrimary">#43A047</item>
+        <item name="colorPrimaryDark">#2E7D32</item>
+        <item name="colorAccent">#43A047</item>
+        <item name="android:statusBarColor">#2E7D32</item>
+    </style>
+    <style name="AppTheme.C17" parent="AppTheme">
+        <item name="colorPrimary">#66BB6A</item>
+        <item name="colorPrimaryDark">#388E3C</item>
+        <item name="colorAccent">#66BB6A</item>
+        <item name="android:statusBarColor">#388E3C</item>
+    </style>
+    <style name="AppTheme.C18" parent="AppTheme">
+        <item name="colorPrimary">#26A69A</item>
+        <item name="colorPrimaryDark">#00796B</item>
+        <item name="colorAccent">#26A69A</item>
+        <item name="android:statusBarColor">#00796B</item>
+    </style>
+    <style name="AppTheme.C19" parent="AppTheme">
+        <item name="colorPrimary">#42A5F5</item>
+        <item name="colorPrimaryDark">#1976D2</item>
+        <item name="colorAccent">#42A5F5</item>
+        <item name="android:statusBarColor">#1976D2</item>
+    </style>
+    <style name="AppTheme.C20" parent="AppTheme">
+        <item name="colorPrimary">#5C6BC0</item>
+        <item name="colorPrimaryDark">#303F9F</item>
+        <item name="colorAccent">#5C6BC0</item>
+        <item name="android:statusBarColor">#303F9F</item>
+    </style>
+    <style name="AppTheme.C21" parent="AppTheme">
+        <item name="colorPrimary">#7E57C2</item>
+        <item name="colorPrimaryDark">#512DA8</item>
+        <item name="colorAccent">#7E57C2</item>
+        <item name="android:statusBarColor">#512DA8</item>
+    </style>
+    <style name="AppTheme.C22" parent="AppTheme">
+        <item name="colorPrimary">#AB47BC</item>
+        <item name="colorPrimaryDark">#7B1FA2</item>
+        <item name="colorAccent">#AB47BC</item>
+        <item name="android:statusBarColor">#7B1FA2</item>
+    </style>
+    <style name="AppTheme.C23" parent="AppTheme">
+        <item name="colorPrimary">#EC407A</item>
+        <item name="colorPrimaryDark">#C2185B</item>
+        <item name="colorAccent">#EC407A</item>
+        <item name="android:statusBarColor">#C2185B</item>
+    </style>
+    <style name="AppTheme.C24" parent="AppTheme">
+        <item name="colorPrimary">#EF5350</item>
+        <item name="colorPrimaryDark">#D32F2F</item>
+        <item name="colorAccent">#EF5350</item>
+        <item name="android:statusBarColor">#D32F2F</item>
+    </style>
+    <style name="AppTheme.C25" parent="AppTheme">
+        <item name="colorPrimary">#FF7043</item>
+        <item name="colorPrimaryDark">#E64A19</item>
+        <item name="colorAccent">#FF7043</item>
+        <item name="android:statusBarColor">#E64A19</item>
+    </style>
+    <style name="AppTheme.C26" parent="AppTheme">
+        <item name="colorPrimary">#FFA726</item>
+        <item name="colorPrimaryDark">#F57C00</item>
+        <item name="colorAccent">#FFA726</item>
+        <item name="android:statusBarColor">#F57C00</item>
+    </style>
+    <style name="AppTheme.C27" parent="AppTheme">
+        <item name="colorPrimary">#FFCA28</item>
+        <item name="colorPrimaryDark">#FF8F00</item>
+        <item name="colorAccent">#FFCA28</item>
+        <item name="android:statusBarColor">#FF8F00</item>
+    </style>
+    <style name="AppTheme.C28" parent="AppTheme">
+        <item name="colorPrimary">#9CCC65</item>
+        <item name="colorPrimaryDark">#689F38</item>
+        <item name="colorAccent">#9CCC65</item>
+        <item name="android:statusBarColor">#689F38</item>
+    </style>
+    <style name="AppTheme.C29" parent="AppTheme">
+        <item name="colorPrimary">#26C6DA</item>
+        <item name="colorPrimaryDark">#0097A7</item>
+        <item name="colorAccent">#26C6DA</item>
+        <item name="android:statusBarColor">#0097A7</item>
+    </style>
+    <style name="AppTheme.C30" parent="AppTheme">
+        <item name="colorPrimary">#8D6E63</item>
+        <item name="colorPrimaryDark">#5D4037</item>
+        <item name="colorAccent">#8D6E63</item>
+        <item name="android:statusBarColor">#5D4037</item>
+    </style>
+    <style name="AppTheme.C31" parent="AppTheme">
+        <item name="colorPrimary">#78909C</item>
+        <item name="colorPrimaryDark">#455A64</item>
+        <item name="colorAccent">#78909C</item>
+        <item name="android:statusBarColor">#455A64</item>
     </style>
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.DayNight"/>
@@ -43,7 +241,7 @@
     </style>
 
     <style name="SettingsSwitch" parent="@style/Widget.AppCompat.CompoundButton.Switch">
-        <item name="colorControlActivated">@color/mg_top_bar_bg</item>
+        <item name="colorControlActivated">?attr/colorPrimary</item>
         <item name="thumbTint">@color/settings_switch_thumb_tint</item>
         <item name="trackTint">@color/settings_switch_track_tint</item>
     </style>

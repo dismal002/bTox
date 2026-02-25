@@ -27,8 +27,10 @@ import com.dismal.btox.R
 import com.dismal.btox.settings.BootstrapNodeSource
 import com.dismal.btox.settings.FtAutoAccept
 import com.dismal.btox.settings.AppLockMode
+import com.dismal.btox.settings.UiStyleMode
 import com.dismal.btox.settings.Settings
 import com.dismal.btox.tox.ToxStarter
+import com.dismal.btox.widget.MessagingWidgetProvider
 import ltd.evilcorp.domain.tox.BootstrapNodeJsonParser
 import ltd.evilcorp.domain.tox.BootstrapNodeRegistry
 import ltd.evilcorp.domain.tox.ProxyType
@@ -83,6 +85,17 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun getAppColorValue(): Int = settings.appColorValue()
+    fun getAvailableAppColors(): IntArray = settings.availableAppColors()
+    fun setAppColorValue(color: Int) {
+        settings.setAppColorValue(color)
+    }
+
+    fun getUiStyleMode(): UiStyleMode = settings.uiStyleMode
+    fun setUiStyleMode(mode: UiStyleMode) {
+        settings.uiStyleMode = mode
+    }
+
     fun getFtAutoAccept(): FtAutoAccept = settings.ftAutoAccept
     fun setFtAutoAccept(autoAccept: FtAutoAccept) {
         settings.ftAutoAccept = autoAccept
@@ -91,6 +104,7 @@ class SettingsViewModel @Inject constructor(
     fun getAppLockMode(): AppLockMode = settings.appLockMode
     fun setAppLockMode(mode: AppLockMode) {
         settings.appLockMode = mode
+        MessagingWidgetProvider.updateAllWidgets(context)
     }
 
     fun hasAppPassword(): Boolean = settings.hasAppPassword()

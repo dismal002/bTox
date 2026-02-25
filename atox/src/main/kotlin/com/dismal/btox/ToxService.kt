@@ -17,7 +17,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -29,6 +28,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import com.dismal.btox.tox.ToxStarter
+import com.dismal.btox.settings.AppColorResolver
 import ltd.evilcorp.core.repository.UserRepository
 import ltd.evilcorp.core.vo.ConnectionStatus
 import ltd.evilcorp.core.vo.FriendRequest
@@ -92,7 +92,7 @@ class ToxService : LifecycleService() {
 
         val builder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.stat_notify_chat)
-            .setColor(ResourcesCompat.getColor(resources, R.color.colorPrimary, null))
+            .setColor(AppColorResolver.primary(this, R.color.colorPrimary))
             .setContentIntent(pendingIntent)
             .setContentTitle(getString(R.string.tox_service_running))
 

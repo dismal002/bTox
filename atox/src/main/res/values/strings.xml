@@ -36,11 +36,16 @@
     <string name="profile_photo_description">Profile photo</string>
     <string name="reject">Reject</string>
     <string name="send">Send</string>
+    <string name="discard">Discard</string>
     <string name="action_add_contact">Add contact</string>
     <string name="action_people_and_options">People &amp; options</string>
     <string name="action_archive">Archive</string>
     <string name="action_unarchive">Unarchive</string>
     <string name="action_delete">Delete</string>
+    <string name="action_chat_background">Chat background</string>
+    <string name="chat_background_set">Set background</string>
+    <string name="chat_background_clear">Clear background</string>
+    <string name="chat_background_permission_error">Could not persist access to selected background image.</string>
     <string name="action_notification_off">Mute notifications</string>
     <string name="action_notification_on">Unmute notifications</string>
     <string name="action_block">Block</string>
@@ -97,15 +102,35 @@
     <string name="atox_connected_with_tcp">Connected (TCP)</string>
     <string name="atox_connected_with_udp">Connected (UDP)</string>
     <string name="read_qr">QR</string>
+    <string name="qr_scan_hint">Align a Tox QR code inside the frame</string>
+    <string name="qr_camera_permission_required">Camera permission is required to scan QR codes.</string>
+    <string name="qr_camera_open_failed">Unable to open camera for QR scanning.</string>
     <string name="read_nfc">NFC</string>
     <string name="nfc_not_available">NFC is not available on this device.</string>
     <string name="nfc_scan_prompt">Tap another bTox device or NFC tag.</string>
     <string name="nfc_scan_success">Received Tox ID via NFC.</string>
     <string name="nfc_scan_invalid">No valid Tox ID found on NFC tag.</string>
+    <string name="widget_description">Messaging conversations widget</string>
+    <string name="widget_open_conversations">Tap to open conversations</string>
+    <string name="widget_locked_message">Widgets are not supported with App Lock enabled</string>
     <string name="pref_heading_theme">Theme</string>
+    <string name="pref_heading_ui_style">UI style</string>
+    <string name="pref_ui_style_classic">Classic</string>
+    <string name="pref_ui_style_material3">Material 3</string>
+    <string name="pref_heading_app_color">App color</string>
+    <string name="pref_app_color_pick_palette">Pick from palette</string>
+    <string name="pref_app_color_enter_hex">Enter hex code</string>
+    <string name="pref_app_color_invalid_hex">Invalid hex color. Use format #RRGGBB.</string>
+    <string name="color_picker_default_title">Select a Color</string>
+    <string name="color_swatch_description">Color %1$d</string>
+    <string name="color_swatch_description_selected">Color %1$d selected</string>
     <string name="pref_theme_follow_system">Follow system</string>
     <string name="pref_theme_light">Light</string>
     <string name="pref_theme_dark">Dark</string>
+    <string name="pref_color_green">Green</string>
+    <string name="pref_color_blue">Blue</string>
+    <string name="pref_color_teal">Teal</string>
+    <string name="pref_color_orange">Orange</string>
     <string name="pref_heading_app_lock">App lock</string>
     <string name="pref_app_lock_none">None</string>
     <string name="pref_app_lock_screenlock">Screenlock</string>
@@ -124,6 +149,16 @@
         <item>@string/pref_theme_follow_system</item>
         <item>@string/pref_theme_light</item>
         <item>@string/pref_theme_dark</item>
+    </string-array>
+    <string-array name="pref_ui_style_options">
+        <item>@string/pref_ui_style_classic</item>
+        <item>@string/pref_ui_style_material3</item>
+    </string-array>
+    <string-array name="pref_app_color_options">
+        <item>@string/pref_color_green</item>
+        <item>@string/pref_color_blue</item>
+        <item>@string/pref_color_teal</item>
+        <item>@string/pref_color_orange</item>
     </string-array>
     <string name="pref_heading_ft_auto_accept">Auto-accept file transfers</string>
     <string name="pref_ft_auto_accept_none">None</string>
@@ -207,6 +242,7 @@
     <string name="bad_port">Bad port</string>
     <string name="tox_save_export_failure">Could not export Tox save: %1$s</string>
     <string name="reply">Reply</string>
+    <string name="play_audio">Play audio</string>
     <string name="pref_auto_away">Auto away</string>
     <string name="seconds">Seconds</string>
     <string name="bad_positive_number">Must be a positive number</string>
@@ -275,4 +311,18 @@
     <string name="export_history">Export history</string>
     <string name="export_history_success">Message history exported</string>
     <string name="export_history_failure">Message history export failed: %1$s</string>
+    <string name="media_picker_camera">Camera</string>
+    <string name="media_picker_photos">Photos</string>
+    <string name="media_picker_voice">Voice memo</string>
+    <string name="media_picker_files">Files</string>
+    <string name="media_picker_camera_permission_required">Camera permission is required to take a photo.</string>
+    <string name="media_picker_mic_permission_required">Microphone permission is required to record a voice memo.</string>
+    <string name="media_picker_camera_open_failed">No camera app available.</string>
+    <string name="media_picker_voice_open_failed">Unable to start voice recorder.</string>
+    <string name="media_picker_voice_recording">Recording voice memo. Tap mic again to send.</string>
+    <string name="media_picker_voice_recorded">Voice memo attached</string>
+    <string name="media_picker_no_photos">No photos found</string>
+    <string name="media_picker_photos_permission_required">Photos permission is required to browse images.</string>
+    <string name="audio_picker_hint_text">Tap &amp; hold</string>
+    <string name="audio_record_view_content_description">Tap &amp; hold to record audio</string>
 </resources>

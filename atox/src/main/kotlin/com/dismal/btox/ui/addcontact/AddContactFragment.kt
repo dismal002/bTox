@@ -6,7 +6,6 @@
 package com.dismal.btox.ui.addcontact
 
 import android.app.Activity.RESULT_OK
-import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.MediaPlayer
@@ -20,7 +19,6 @@ import android.widget.TextView
 import android.widget.Toast
 import android.nfc.tech.Ndef
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -72,7 +70,7 @@ class AddContactFragment : BaseFragment<FragmentAddContactBinding>(FragmentAddCo
     private val scanQrLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode != RESULT_OK) return@registerForActivityResult
         val toxId = it.data?.getStringExtra("SCAN_RESULT") ?: return@registerForActivityResult
-        binding.toxId.setText(toxId.removePrefix("tox:"))
+        binding.toxId.setText(toxId.removePrefix("tox:").removePrefix("TOX:"))
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) = binding.run {
@@ -152,18 +150,7 @@ class AddContactFragment : BaseFragment<FragmentAddContactBinding>(FragmentAddCo
 
         if (requireContext().packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) {
             readQr.setOnClickListener {
-                try {
-                    scanQrLauncher.launch(
-                        Intent("com.google.zxing.client.android.SCAN").apply {
-                            putExtra("SCAN_FORMATS", "QR_CODE")
-                            putExtra("SCAN_ORIENTATION_LOCKED", false)
-                            putExtra("BEEP_ENABLED", false)
-                        },
-                    )
-                } catch (_: ActivityNotFoundException) {
-                    val uri = "https://f-droid.org/en/packages/com.google.zxing.client.android/".toUri()
-                    startActivity(Intent(Intent.ACTION_VIEW, uri))
-                }
+                scanQrLauncher.launch(Intent(requireContext(), QrScanActivity::class.java))
             }
         } else {
             readQr.visibility = View.GONE

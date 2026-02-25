@@ -24,6 +24,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import com.dismal.btox.R
 import com.dismal.btox.settings.Settings
+import com.dismal.btox.settings.UiStyleMode
 import com.dismal.btox.tox.ToxStarter
 import com.dismal.btox.ui.NotificationHelper
 import ltd.evilcorp.core.vo.Contact
@@ -68,6 +69,7 @@ class ContactListViewModel @Inject constructor(
     fun quitTox() = toxStarter.stopTox()
 
     fun quittingNeedsConfirmation(): Boolean = settings.confirmQuitting
+    fun useMaterial3Ui(): Boolean = settings.uiStyleMode == UiStyleMode.Material3
 
     fun acceptFriendRequest(friendRequest: FriendRequest) = friendRequestManager.accept(friendRequest)
     fun rejectFriendRequest(friendRequest: FriendRequest) = friendRequestManager.reject(friendRequest)

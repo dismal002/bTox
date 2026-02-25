@@ -11,7 +11,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/mg_top_bar_bg"
+            android:background="?attr/colorPrimary"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
             app:title="@string/settings"/>
 
@@ -43,6 +43,32 @@
                             android:layout_height="1dp"
                             android:background="@color/dividerColor"/>
                     <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/uiStyleRow"
+                            style="@style/OptionRow"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:visibility="visible">
+                        <TextView
+                                style="@style/OptionItemText"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:text="@string/pref_heading_ui_style"
+                                app:layout_constraintEnd_toStartOf="@id/uiStyle"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent"/>
+                        <Spinner
+                                android:id="@+id/uiStyle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="parent"/>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                    <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="@color/dividerColor"/>
+                    <androidx.constraintlayout.widget.ConstraintLayout
                             android:id="@+id/themeRow"
                             style="@style/OptionRow"
                             android:layout_width="match_parent"
@@ -61,6 +87,47 @@
                                 android:id="@+id/theme"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="parent"/>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                    <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="@color/dividerColor"/>
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/appColorRow"
+                            style="@style/OptionRow"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:background="?android:attr/selectableItemBackground">
+                        <TextView
+                                style="@style/OptionItemText"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:text="@string/pref_heading_app_color"
+                                app:layout_constraintEnd_toStartOf="@id/appColorValue"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent"/>
+
+                        <TextView
+                                android:id="@+id/appColorValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="8dp"
+                                android:textColor="@color/mg_text_muted"
+                                android:textSize="13sp"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toStartOf="@id/appColorPreview"
+                                app:layout_constraintTop_toTopOf="parent"/>
+
+                        <View
+                                android:id="@+id/appColorPreview"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:background="@drawable/app_color_preview_circle"
                                 app:layout_constraintBottom_toBottomOf="parent"
                                 app:layout_constraintEnd_toEndOf="parent"
                                 app:layout_constraintTop_toTopOf="parent"/>
@@ -439,7 +506,7 @@
                             android:layout_height="match_parent"
                             android:padding="16dp"
                             android:textSize="16sp"
-                            android:textColor="@color/colorAccent"
+                            android:textColor="?attr/colorAccent"
                             tools:text="Warning: Proxy is bork"/>
                     </LinearLayout>
                     <View

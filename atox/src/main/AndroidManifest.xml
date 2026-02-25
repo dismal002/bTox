@@ -4,9 +4,12 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
     <uses-permission android:name="android.permission.NFC"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -39,6 +42,18 @@
 
         <receiver android:name=".ActionReceiver"/>
 
+        <receiver
+                android:name=".widget.MessagingWidgetProvider"
+                android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="com.dismal.btox.action.REFRESH_WIDGETS"/>
+            </intent-filter>
+            <meta-data
+                    android:name="android.appwidget.provider"
+                    android:resource="@xml/widget_messaging" />
+        </receiver>
+
         <provider
                 android:name="androidx.core.content.FileProvider"
                 android:authorities="${applicationId}.fileprovider"
@@ -68,5 +83,17 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
+
+        <activity
+                android:name=".ui.addcontact.QrScanActivity"
+                android:exported="false"
+                android:screenOrientation="portrait"
+                android:theme="@style/AppTheme" />
+
+        <activity
+                android:name=".ui.chat.ChatCameraCaptureActivity"
+                android:exported="false"
+                android:screenOrientation="portrait"
+                android:theme="@style/AppTheme" />
     </application>
 </manifest>

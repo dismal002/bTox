@@ -18,7 +18,7 @@
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                android:background="@color/mg_top_bar_bg"
+                android:background="?attr/colorPrimary"
                 android:elevation="16dp"
                 android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
                 app:popupTheme="@style/AppTheme.PopupOverlay"
@@ -77,65 +77,84 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <ListView android:id="@+id/messages"
+    <FrameLayout
+            android:id="@+id/messagesContainer"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginHorizontal="6dp"
-            android:layout_marginTop="4dp"
-            android:divider="@drawable/message_divider"
-            android:dividerHeight="2dp"
-            android:fastScrollEnabled="true"
-            android:stackFromBottom="true"
-            android:transcriptMode="normal"
-            app:layout_constraintBottom_toTopOf="@+id/bottomBar"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/appBarLayout"/>
-
-    <com.android.messaging.ui.ListEmptyView
-            android:id="@+id/noMessagesView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:orientation="vertical"
-            android:visibility="gone"
-            app:layout_constraintBottom_toTopOf="@+id/bottomBar"
+            app:layout_constraintBottom_toTopOf="@+id/composerContainer"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/appBarLayout">
 
         <ImageView
-                android:id="@+id/empty_image_hint"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
+                android:id="@+id/chatBackgroundImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:contentDescription="@null"
-                android:importantForAccessibility="no" />
+                android:importantForAccessibility="no"
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
 
-        <TextView
-                android:id="@+id/empty_text_hint"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+        <ListView android:id="@+id/messages"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginHorizontal="6dp"
+                android:layout_marginTop="4dp"
+                android:background="@android:color/transparent"
+                android:cacheColorHint="@android:color/transparent"
+                android:divider="@drawable/message_divider"
+                android:dividerHeight="2dp"
+                android:fastScrollEnabled="true"
+                android:stackFromBottom="true"
+                android:transcriptMode="normal" />
+
+        <com.android.messaging.ui.ListEmptyView
+                android:id="@+id/noMessagesView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:layout_marginLeft="60dp"
-                android:layout_marginTop="20dp"
-                android:layout_marginRight="60dp"
-                android:gravity="center_horizontal"
-                android:textColor="@color/mg_text_muted"
-                android:textSize="14sp" />
-    </com.android.messaging.ui.ListEmptyView>
+                android:orientation="vertical"
+                android:visibility="gone">
 
-    <LinearLayout android:id="@+id/bottomBar"
+            <ImageView
+                    android:id="@+id/empty_image_hint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no" />
+
+            <TextView
+                    android:id="@+id/empty_text_hint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="60dp"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginRight="60dp"
+                    android:gravity="center_horizontal"
+                    android:textColor="@color/mg_text_muted"
+                    android:textSize="14sp" />
+        </com.android.messaging.ui.ListEmptyView>
+    </FrameLayout>
+
+    <LinearLayout
+            android:id="@+id/composerContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout android:id="@+id/bottomBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="6dp"
             android:layout_marginTop="6dp"
             android:layout_marginBottom="6dp"
             android:gravity="center_vertical"
-            android:orientation="horizontal"
-            app:layout_constraintBottom_toBottomOf="parent">
+            android:orientation="horizontal">
 
-        <ImageButton android:id="@+id/attach"
+            <ImageButton android:id="@+id/attach"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
@@ -148,7 +167,7 @@
                 android:src="@drawable/ic_attachment_dark"
                 android:tint="@color/mg_icon_tint"/>
 
-        <EditText android:id="@+id/outgoingMessage"
+            <EditText android:id="@+id/outgoingMessage"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -166,13 +185,13 @@
                 android:textColorHint="@color/mg_text_hint"
                 tools:targetApi="26"/>
 
-        <FrameLayout
+            <FrameLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="top"
                 android:layout_marginStart="8dp">
 
-            <ImageButton android:id="@+id/send"
+                <ImageButton android:id="@+id/send"
                     android:layout_width="@dimen/conversation_message_contact_icon_size"
                     android:layout_height="@dimen/conversation_message_contact_icon_size"
                     android:background="@drawable/send_arrow_background"
@@ -180,6 +199,230 @@
                     android:padding="8dp"
                     android:src="@drawable/ic_send_light"
                     android:visibility="gone"/>
-        </FrameLayout>
+            </FrameLayout>
+        </LinearLayout>
+
+        <LinearLayout
+                android:id="@+id/mediaPickerPanel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+            <FrameLayout
+                    android:id="@+id/mediaPickerContent"
+                    android:layout_width="match_parent"
+                    android:layout_height="260dp"
+                    android:background="@color/mg_surface"
+                    android:visibility="gone">
+
+                <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/mediaPickerPhotosGrid"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:clipToPadding="false"
+                        android:padding="2dp"
+                        android:scrollbars="vertical"
+                        android:visibility="gone" />
+
+                <TextView
+                        android:id="@+id/mediaPickerPhotosEmpty"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="@string/media_picker_no_photos"
+                        android:textColor="@color/mg_text_muted"
+                        android:visibility="gone" />
+
+                <FrameLayout
+                        android:id="@+id/mediaPickerCameraChooser"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:visibility="gone">
+
+                    <SurfaceView
+                            android:id="@+id/mediaCameraSurface"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+
+                    <ImageButton
+                            android:id="@+id/mediaCameraCapture"
+                            android:layout_width="70dp"
+                            android:layout_height="70dp"
+                            android:layout_gravity="bottom|center_horizontal"
+                            android:layout_marginBottom="16dp"
+                            android:background="@drawable/audio_record_control_button_background"
+                            android:contentDescription="@string/media_picker_camera"
+                            android:src="@drawable/ic_camera_light" />
+                </FrameLayout>
+
+                <LinearLayout
+                        android:id="@+id/mediaPickerVoiceChooser"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                    <TextView
+                            android:id="@+id/voiceHintText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:text="@string/audio_picker_hint_text"
+                            android:textColor="@color/audio_picker_hint_text_color"
+                            android:textSize="18sp" />
+
+                    <Chronometer
+                            android:id="@+id/voiceTimerText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:textColor="@color/audio_picker_timer_text_color"
+                            android:textSize="18sp"
+                            android:visibility="gone" />
+
+                    <FrameLayout
+                            android:id="@+id/voiceRecordButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="28dp"
+                            android:contentDescription="@string/audio_record_view_content_description"
+                            android:padding="30dp">
+
+                        <ImageView
+                                android:id="@+id/voiceRecordButtonVisual"
+                                android:layout_width="70dp"
+                                android:layout_height="70dp"
+                                android:background="@drawable/audio_record_control_button_background"
+                                android:scaleType="center"
+                                android:src="@drawable/ic_mp_audio_mic" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                            android:id="@+id/voicePreviewLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="20dp"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginEnd="16dp"
+                            android:background="@drawable/attachment_audio_preview_background"
+                            android:gravity="center_vertical"
+                            android:orientation="vertical"
+                            android:padding="12dp"
+                            android:visibility="gone">
+
+                        <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                            <ImageButton
+                                    android:id="@+id/voicePreviewPlayPauseButton"
+                                    android:layout_width="40dp"
+                                    android:layout_height="40dp"
+                                    android:background="@drawable/audio_play_button_bg"
+                                    android:contentDescription="@string/play_audio"
+                                    android:padding="8dp"
+                                    android:scaleType="center"
+                                    android:src="@android:drawable/ic_media_play"
+                                    android:tint="@android:color/white" />
+
+                            <TextView
+                                    android:id="@+id/voicePreviewTimer"
+                                    android:layout_width="70dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    android:layout_marginEnd="10dp"
+                                    android:text="0:00"
+                                    android:textColor="@color/mg_text_secondary"
+                                    android:textSize="14sp" />
+
+                            <SeekBar
+                                    android:id="@+id/voicePreviewSeekBar"
+                                    android:layout_width="0dp"
+                                    android:layout_height="6dp"
+                                    android:layout_weight="1"
+                                    android:maxHeight="6dp"
+                                    android:minHeight="6dp"
+                                    android:padding="0dp"
+                                    android:splitTrack="false"
+                                    android:thumb="@drawable/audio_seekbar_thumb" />
+
+                            <ImageButton
+                                    android:id="@+id/voicePreviewDiscardInline"
+                                    android:layout_width="40dp"
+                                    android:layout_height="40dp"
+                                    android:layout_marginStart="8dp"
+                                    android:background="@android:color/transparent"
+                                    android:contentDescription="@string/discard"
+                                    android:padding="8dp"
+                                    android:src="@drawable/ic_cancel_small_dark"
+                                    android:tint="@color/mg_text_secondary" />
+
+                            <ImageButton
+                                    android:id="@+id/voicePreviewSendInline"
+                                    android:layout_width="40dp"
+                                    android:layout_height="40dp"
+                                    android:layout_marginStart="6dp"
+                                    android:background="@drawable/send_arrow_background"
+                                    android:contentDescription="@string/send"
+                                    android:padding="8dp"
+                                    android:src="@drawable/ic_send_light" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </FrameLayout>
+
+            <LinearLayout
+                    android:id="@+id/mediaPickerTabStrip"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="?attr/colorPrimary"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                <ImageButton
+                        android:id="@+id/mediaPickerCamera"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@drawable/mediapicker_tab_button_background"
+                        android:contentDescription="@string/media_picker_camera"
+                        android:padding="12dp"
+                        android:src="@drawable/ic_camera_light" />
+
+                <ImageButton
+                        android:id="@+id/mediaPickerPhotos"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@drawable/mediapicker_tab_button_background"
+                        android:contentDescription="@string/media_picker_photos"
+                        android:padding="12dp"
+                        android:src="@drawable/ic_image_light" />
+
+                <ImageButton
+                        android:id="@+id/mediaPickerVoice"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@drawable/mediapicker_tab_button_background"
+                        android:contentDescription="@string/media_picker_voice"
+                        android:padding="12dp"
+                        android:src="@drawable/ic_audio_light" />
+
+                <ImageButton
+                        android:id="@+id/mediaPickerFile"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@drawable/mediapicker_tab_button_background"
+                        android:contentDescription="@string/media_picker_files"
+                        android:padding="12dp"
+                        android:src="@drawable/ic_attach_file"
+                        android:tint="@android:color/white" />
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

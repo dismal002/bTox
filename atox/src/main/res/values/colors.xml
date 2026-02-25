@@ -45,4 +45,10 @@
     <color name="mg_timestamp_text">#80000000</color>
     <color name="timestamp_text_outgoing">#99323232</color>
     <color name="timestamp_text_incoming">#99FFFFFF</color>
+    <color name="background_item_pressed">#33FFFFFF</color>
+    <color name="background_item_activated">#1FFFFFFF</color>
+    <color name="background_item_transparent">#00000000</color>
+    <color name="audio_record_control_button_stroke">#30000000</color>
+    <color name="audio_picker_hint_text_color">#40000000</color>
+    <color name="audio_picker_timer_text_color">#FF323232</color>
 </resources>

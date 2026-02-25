@@ -17,7 +17,7 @@
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                android:background="@color/mg_top_bar_bg"
+                android:background="?attr/colorPrimary"
                 android:elevation="16dp"
                 android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
                 app:navigationIcon="@drawable/ic_back">
@@ -113,7 +113,7 @@
                 android:paddingHorizontal="4dp"
                 android:src="@drawable/ic_send"
                 android:visibility="gone"
-                app:tint="@color/colorPrimary"/>
+                app:tint="?attr/colorPrimary"/>
 
         <ImageButton android:id="@+id/attach"
                 android:layout_width="wrap_content"

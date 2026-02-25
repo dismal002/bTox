@@ -17,6 +17,7 @@ import java.security.SecureRandom
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 import javax.inject.Inject
+import com.dismal.btox.R
 import com.dismal.btox.BootReceiver
 import ltd.evilcorp.core.vo.PublicKey
 import ltd.evilcorp.domain.tox.ProxyType
@@ -39,6 +40,11 @@ enum class AppLockMode {
     AppPassword,
 }
 
+enum class UiStyleMode {
+    Classic,
+    Material3,
+}
+
 class Settings @Inject constructor(private val ctx: Context) {
     private val preferences = PreferenceManager.getDefaultSharedPreferences(ctx)
 
@@ -48,6 +54,55 @@ class Settings @Inject constructor(private val ctx: Context) {
             preferences.edit { putInt("theme", theme) }
             AppCompatDelegate.setDefaultNightMode(theme)
         }
+
+    var appColorIndex: Int
+        get() = preferences.getInt("app_color_index", 0).coerceIn(0, APP_THEME_STYLES.lastIndex)
+        set(value) = preferences.edit { putInt("app_color_index", value.coerceIn(0, APP_THEME_STYLES.lastIndex)) }
+
+    var customAppColor: Int
+        get() = preferences.getInt("custom_app_color", 0)
+        set(value) = preferences.edit { putInt("custom_app_color", value) }
+
+    fun appColorValue(): Int {
+        val custom = customAppColor
+        if (custom != 0) return custom
+        return APP_THEME_COLORS[appColorIndex]
+    }
+
+    var uiStyleMode: UiStyleMode
+        get() = UiStyleMode.entries.getOrElse(preferences.getInt("ui_style_mode", UiStyleMode.Classic.ordinal)) {
+            UiStyleMode.Classic
+        }
+        set(mode) = preferences.edit { putInt("ui_style_mode", mode.ordinal) }
+
+    fun availableAppColors(): IntArray = APP_THEME_COLORS
+
+    fun setAppColorValue(color: Int) {
+        var bestIndex = 0
+        var bestDistance = Long.MAX_VALUE
+        val targetR = (color shr 16) and 0xFF
+        val targetG = (color shr 8) and 0xFF
+        val targetB = color and 0xFF
+        var exactMatch = false
+        APP_THEME_COLORS.forEachIndexed { index, c ->
+            val r = (c shr 16) and 0xFF
+            val g = (c shr 8) and 0xFF
+            val b = c and 0xFF
+            val dr = (targetR - r).toLong()
+            val dg = (targetG - g).toLong()
+            val db = (targetB - b).toLong()
+            val dist = dr * dr + dg * dg + db * db
+            if (dist < bestDistance) {
+                bestDistance = dist
+                bestIndex = index
+            }
+            if (color == c) exactMatch = true
+        }
+        appColorIndex = bestIndex
+        customAppColor = if (exactMatch) 0 else color
+    }
+
+    fun appThemeRes(): Int = APP_THEME_STYLES[appColorIndex]
 
     var udpEnabled: Boolean
         get() = preferences.getBoolean("udp_enabled", false)
@@ -197,6 +252,76 @@ class Settings @Inject constructor(private val ctx: Context) {
     }
 
     private companion object {
+        private val APP_THEME_COLORS = intArrayOf(
+            0xFF689F38.toInt(), // Green
+            0xFF1E88E5.toInt(), // Blue
+            0xFF00897B.toInt(), // Teal
+            0xFFEF6C00.toInt(), // Orange
+            0xFFE53935.toInt(), // Red
+            0xFFD81B60.toInt(), // Pink
+            0xFF8E24AA.toInt(), // Purple
+            0xFF3949AB.toInt(), // Indigo
+            0xFF00ACC1.toInt(), // Cyan
+            0xFF7CB342.toInt(), // Light Green
+            0xFFFFB300.toInt(), // Amber
+            0xFFF4511E.toInt(), // Deep Orange
+            0xFF6D4C41.toInt(), // Brown
+            0xFF546E7A.toInt(), // Blue Grey
+            0xFF2E7D32.toInt(), // Forest
+            0xFF0277BD.toInt(), // Ocean
+            0xFF43A047.toInt(), // Green 2
+            0xFF66BB6A.toInt(), // Green 3
+            0xFF26A69A.toInt(), // Teal 2
+            0xFF42A5F5.toInt(), // Blue 2
+            0xFF5C6BC0.toInt(), // Indigo 2
+            0xFF7E57C2.toInt(), // Deep Purple
+            0xFFAB47BC.toInt(), // Purple 2
+            0xFFEC407A.toInt(), // Pink 2
+            0xFFEF5350.toInt(), // Red 2
+            0xFFFF7043.toInt(), // Deep Orange 2
+            0xFFFFA726.toInt(), // Orange 2
+            0xFFFFCA28.toInt(), // Amber 2
+            0xFF9CCC65.toInt(), // Light Green 2
+            0xFF26C6DA.toInt(), // Cyan 2
+            0xFF8D6E63.toInt(), // Brown 2
+            0xFF78909C.toInt(), // Blue Grey 2
+        )
+
+        private val APP_THEME_STYLES = intArrayOf(
+            R.style.AppTheme_C0,
+            R.style.AppTheme_C1,
+            R.style.AppTheme_C2,
+            R.style.AppTheme_C3,
+            R.style.AppTheme_C4,
+            R.style.AppTheme_C5,
+            R.style.AppTheme_C6,
+            R.style.AppTheme_C7,
+            R.style.AppTheme_C8,
+            R.style.AppTheme_C9,
+            R.style.AppTheme_C10,
+            R.style.AppTheme_C11,
+            R.style.AppTheme_C12,
+            R.style.AppTheme_C13,
+            R.style.AppTheme_C14,
+            R.style.AppTheme_C15,
+            R.style.AppTheme_C16,
+            R.style.AppTheme_C17,
+            R.style.AppTheme_C18,
+            R.style.AppTheme_C19,
+            R.style.AppTheme_C20,
+            R.style.AppTheme_C21,
+            R.style.AppTheme_C22,
+            R.style.AppTheme_C23,
+            R.style.AppTheme_C24,
+            R.style.AppTheme_C25,
+            R.style.AppTheme_C26,
+            R.style.AppTheme_C27,
+            R.style.AppTheme_C28,
+            R.style.AppTheme_C29,
+            R.style.AppTheme_C30,
+            R.style.AppTheme_C31,
+        )
+
         private const val PASSWORD_ITERATIONS = 120_000
         private const val PASSWORD_KEY_LENGTH_BITS = 256
         private const val PASSWORD_SALT_SIZE_BYTES = 16

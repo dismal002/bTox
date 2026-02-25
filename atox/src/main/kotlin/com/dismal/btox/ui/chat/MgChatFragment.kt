@@ -19,6 +19,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.observe
 import com.dismal.btox.R
+import com.dismal.btox.settings.AppColorResolver
 import com.dismal.btox.vmFactory
 import kotlin.math.max
 import ltd.evilcorp.core.vo.MessageType
@@ -36,6 +37,7 @@ class MgChatFragment : Fragment() {
     private lateinit var outgoingMessage: EditText
     private lateinit var sendButton: ImageButton
     private lateinit var attachButton: ImageButton
+    private lateinit var chatAdapter: ChatAdapter
 
     private val attachFilesLauncher =
         registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { files ->
@@ -59,10 +61,7 @@ class MgChatFragment : Fragment() {
         outgoingMessage = view.findViewById(R.id.outgoingMessage)
         sendButton = view.findViewById(R.id.send)
         attachButton = view.findViewById(R.id.attach)
-        outgoingMessage.background?.mutate()?.setColorFilter(
-            ContextCompat.getColor(requireContext(), R.color.mg_input_background),
-            PorterDuff.Mode.SRC_IN,
-        )
+        applyComposerUiStyle()
         val bottomBar = view.findViewById<View>(R.id.bottomBar)
         val appBarLayout = view.findViewById<View>(R.id.appBarLayout)
 
@@ -78,33 +77,36 @@ class MgChatFragment : Fragment() {
             compat
         }
 
-        val adapter = ChatAdapter(layoutInflater, resources)
-        messagesList.adapter = adapter
+        chatAdapter = ChatAdapter(layoutInflater, resources)
+        chatAdapter.material3StyleEnabled = viewModel.useMaterial3Ui()
+        messagesList.adapter = chatAdapter
         registerForContextMenu(messagesList)
 
         viewModel.messages.observe(viewLifecycleOwner) { list ->
-            adapter.messages = list
-            adapter.notifyDataSetChanged()
-            messagesList.setSelection(adapter.count - 1)
+            chatAdapter.messages = list
+            chatAdapter.notifyDataSetChanged()
+            messagesList.setSelection(chatAdapter.count - 1)
         }
 
         viewModel.fileTransfers.observe(viewLifecycleOwner) { fts ->
-            adapter.fileTransfers = fts
-            adapter.notifyDataSetChanged()
+            chatAdapter.fileTransfers = fts
+            chatAdapter.notifyDataSetChanged()
         }
 
         messagesList.setOnItemClickListener { parent, v, position, id ->
             when (v.id) {
-                R.id.accept -> viewModel.acceptFt(adapter.messages[position].correlationId)
-                R.id.reject, R.id.cancel -> viewModel.rejectFt(adapter.messages[position].correlationId)
+                R.id.accept -> viewModel.acceptFt(chatAdapter.messages[position].correlationId)
+                R.id.reject, R.id.cancel -> viewModel.rejectFt(chatAdapter.messages[position].correlationId)
                 R.id.fileTransfer -> {
-                    val idc = adapter.messages[position].correlationId
-                    val ft = adapter.fileTransfers.find { it.id == idc } ?: return@setOnItemClickListener
+                    val idc = chatAdapter.messages[position].correlationId
+                    val ft = chatAdapter.fileTransfers.find { it.id == idc } ?: return@setOnItemClickListener
+                    if (chatAdapter.onFileTransferClicked(ft)) return@setOnItemClickListener
                     if (ft.outgoing) return@setOnItemClickListener
                     if (!ft.isComplete()) return@setOnItemClickListener
                     if (!ft.destination.startsWith("file://")) return@setOnItemClickListener
                     val contentType = java.net.URLConnection.guessContentTypeFromName(ft.fileName)
-                    val uri = androidx.core.content.FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", java.io.File(ft.destination.toUri().path!!))
+                    val filePath = ft.destination.toUri().path ?: return@setOnItemClickListener
+                    val uri = androidx.core.content.FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", java.io.File(filePath))
                     val shareIntent = Intent(Intent.ACTION_VIEW).apply {
                         putExtra(Intent.EXTRA_TITLE, ft.fileName)
                         setDataAndType(uri, contentType)
@@ -137,6 +139,9 @@ class MgChatFragment : Fragment() {
     }
 
     override fun onPause() {
+        if (::chatAdapter.isInitialized) {
+            chatAdapter.releaseAudio()
+        }
         viewModel.setDraft(outgoingMessage.text.toString())
         viewModel.setActiveChat(PublicKey(""))
         super.onPause()
@@ -159,7 +164,27 @@ class MgChatFragment : Fragment() {
         attachButton.visibility = if (sendButton.isVisible) View.GONE else View.VISIBLE
         attachButton.isEnabled = viewModel.contactOnline
         attachButton.setColorFilter(
-            androidx.core.content.ContextCompat.getColor(requireContext(), if (attachButton.isEnabled) R.color.colorPrimary else android.R.color.darker_gray)
+            if (attachButton.isEnabled) {
+                resolveThemeColor(androidx.appcompat.R.attr.colorPrimary, R.color.colorPrimary)
+            } else {
+                androidx.core.content.ContextCompat.getColor(requireContext(), android.R.color.darker_gray)
+            },
         )
+    }
+
+    private fun applyComposerUiStyle() {
+        if (viewModel.useMaterial3Ui()) {
+            outgoingMessage.setBackgroundResource(R.drawable.msg_bubble_input_m3)
+        } else {
+            outgoingMessage.setBackgroundResource(R.drawable.msg_bubble_input)
+            outgoingMessage.background?.mutate()?.setColorFilter(
+                ContextCompat.getColor(requireContext(), R.color.mg_input_background),
+                PorterDuff.Mode.SRC_IN,
+            )
+        }
+    }
+
+    private fun resolveThemeColor(attr: Int, fallbackColorRes: Int): Int {
+        return AppColorResolver.resolve(requireContext(), attr, fallbackColorRes)
     }
 }

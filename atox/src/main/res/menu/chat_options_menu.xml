@@ -23,6 +23,10 @@
         android:title="@string/action_delete"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_chat_background"
+        android:title="@string/action_chat_background"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/backup_history"
         android:title="@string/export_history"
         app:showAsAction="never" />

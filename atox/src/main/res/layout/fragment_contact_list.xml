@@ -16,7 +16,7 @@
             <androidx.appcompat.widget.Toolbar android:id="@+id/toolbar"
                     android:layout_width="match_parent"
                     android:layout_height="?attr/actionBarSize"
-                    android:background="@color/mg_top_bar_bg"
+                    android:background="?attr/colorPrimary"
                     app:popupTheme="@style/AppTheme.PopupOverlay"/>
         </com.google.android.material.appbar.AppBarLayout>
 
@@ -87,6 +87,23 @@
                     android:paddingBottom="@dimen/fab_padding_bottom"
                     android:scaleType="center"
                     android:src="@drawable/ic_add_white"
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/startNewConversationButtonM3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/fab_left_right_margin"
+                    android:layout_marginBottom="@dimen/fab_bottom_margin"
+                    android:contentDescription="@string/start_new_conversation"
+                    android:visibility="gone"
+                    app:backgroundTint="?attr/colorPrimary"
+                    app:elevation="@dimen/fab_elevation"
+                    app:rippleColor="#33000000"
+                    app:srcCompat="@drawable/ic_add_white"
+                    app:tint="@android:color/white"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>

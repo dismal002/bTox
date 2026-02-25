@@ -5,13 +5,13 @@
         android:state_pressed="true">
         <shape
             android:shape="oval" >
-            <solid android:color="@color/compose_message_send_color_pressed" />
+            <solid android:color="?attr/colorPrimaryDark" />
         </shape>
      </item>
     <item>
         <shape
             android:shape="oval" >
-            <solid android:color="@color/compose_message_send_color" />
+            <solid android:color="?attr/colorPrimary" />
         </shape>
     </item>
 </selector>

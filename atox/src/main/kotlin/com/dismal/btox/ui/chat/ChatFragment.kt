@@ -11,20 +11,36 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Color
 import android.graphics.PorterDuff
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
+import android.hardware.Camera
+import android.graphics.drawable.ClipDrawable
+import android.media.MediaPlayer
+import android.media.MediaRecorder
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
+import android.provider.MediaStore
 import android.util.Log
 import android.view.ContextMenu
 import android.view.MenuItem
 import android.view.MotionEvent
+import android.view.SurfaceHolder
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ImageView
+import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.content.getSystemService
@@ -39,8 +55,12 @@ import androidx.core.view.updatePadding
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.material.math.MathUtils.lerp
+import com.squareup.picasso.Picasso
+import com.squareup.picasso.Callback
 import java.io.File
+import java.io.FileOutputStream
 import java.net.URLConnection
 import java.text.DateFormat
 import java.text.SimpleDateFormat
@@ -50,6 +70,7 @@ import kotlin.math.max
 import com.dismal.btox.R
 import com.dismal.btox.databinding.FragmentChatBinding
 import com.dismal.btox.requireStringArg
+import com.dismal.btox.settings.AppColorResolver
 import com.dismal.btox.truncated
 import com.dismal.btox.ui.BaseFragment
 import com.dismal.btox.vmFactory
@@ -66,6 +87,8 @@ private const val TAG = "ChatFragment"
 const val CONTACT_PUBLIC_KEY = "publicKey"
 const val FOCUS_ON_MESSAGE_BOX = "focusOnMessageBox"
 private const val MAX_CONFIRM_DELETE_STRING_LENGTH = 20
+private const val VOICE_MEMO_CACHE_SUBDIR = "shared_images"
+private const val VOICE_MEMO_MIN_DURATION_MS = 300L
 
 class OpenMultiplePersistableDocuments : ActivityResultContracts.OpenMultipleDocuments() {
     override fun createIntent(context: Context, input: Array<String>): Intent = super.createIntent(context, input)
@@ -80,6 +103,31 @@ class ChatFragment : BaseFragment<FragmentChatBinding>(FragmentChatBinding::infl
     private var selectedFt: Int = Int.MIN_VALUE
     private var fts: List<FileTransfer> = listOf()
     private var messageActionMode: ActionMode? = null
+    private var lastAppliedBackgroundUri = ""  // Track the last background we applied locally
+    private lateinit var chatAdapter: ChatAdapter
+    private lateinit var mediaPhotoGridAdapter: MediaPhotoGridAdapter
+    private var mediaCamera: Camera? = null
+    private var mediaCameraSurfaceReady = false
+    private var voiceMemoRecorder: MediaRecorder? = null
+    private var voiceMemoFile: File? = null
+    private var voiceMemoRecording = false
+    private var voiceMemoStartedAt = 0L
+    private var voiceMemoPlayer: MediaPlayer? = null
+    private var voiceMemoPreviewDurationMs = 0
+    private var voiceMemoPreviewSeeking = false
+    private val voicePreviewUiHandler = Handler(Looper.getMainLooper())
+    private val updateVoicePreviewProgress = object : Runnable {
+        override fun run() {
+            val player = voiceMemoPlayer ?: return
+            if (!binding.voicePreviewLayout.isVisible) return
+            if (!voiceMemoPreviewSeeking) {
+                updateVoicePreviewUi(player.currentPosition, voiceMemoPreviewDurationMs)
+            }
+            if (player.isPlaying) {
+                voicePreviewUiHandler.postDelayed(this, 250L)
+            }
+        }
+    }
 
     private val exportBackupLauncher =
         registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { dest ->
@@ -101,9 +149,77 @@ class ChatFragment : BaseFragment<FragmentChatBinding>(FragmentChatBinding::infl
             }
         }
 
+    private val cameraPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                showCameraPanel()
+            } else {
+                Toast.makeText(requireContext(), R.string.media_picker_camera_permission_required, Toast.LENGTH_LONG).show()
+            }
+        }
+
+    private val recordAudioPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                showVoiceRecorderPanel()
+            } else {
+                Toast.makeText(requireContext(), R.string.media_picker_mic_permission_required, Toast.LENGTH_LONG).show()
+            }
+        }
+
+    private val photosPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                showPhotosPanel()
+            } else {
+                Toast.makeText(requireContext(), R.string.media_picker_photos_permission_required, Toast.LENGTH_LONG).show()
+            }
+        }
+
+    private val chatBackgroundPickerLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri == null) {
+                Log.d(TAG, "Chat background picker cancelled")
+                return@registerForActivityResult
+            }
+            Log.d(TAG, "Chat background selected: $uri, contactPubKey='$contactPubKey'")
+            val copiedUri = copyChatBackgroundToPrivateStorage(uri) ?: return@registerForActivityResult
+            Log.d(TAG, "Chat background copied to: $copiedUri")
+            viewModel.contact.value?.chatBackgroundUri?.let { deleteLocalChatBackgroundIfOwned(it) }
+            // Apply the background immediately to the UI
+            applyChatBackground(copiedUri)
+            Log.d(TAG, "Background applied to UI, now saving to database with contactPubKey='$contactPubKey'")
+            // Save to database - this may trigger the observer, but the UI is already updated
+            viewModel.setChatBackgroundUri(PublicKey(contactPubKey), copiedUri)
+            Log.d(TAG, "Chat background URI saved to database")
+        }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?): Unit = binding.run {
         contactPubKey = requireStringArg(CONTACT_PUBLIC_KEY)
+        Log.d(TAG, "onViewCreated with contactPubKey='$contactPubKey'")
+        lastAppliedBackgroundUri = ""  // Reset when entering a new/same chat
         viewModel.setActiveChat(PublicKey(contactPubKey))
+
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    if (mediaPickerPanel.isVisible) {
+                        if (voiceMemoRecording) {
+                            stopVoiceMemoRecording(keepForPreview = false)
+                        }
+                        clearVoiceMemoPreview(deleteFile = true)
+                        hideCameraPanel()
+                        hideVoiceRecorderPanel()
+                        hidePhotosPanel()
+                        mediaPickerPanel.isVisible = false
+                        return
+                    }
+                    isEnabled = false
+                    requireActivity().onBackPressedDispatcher.onBackPressed()
+                }
+            },
+        )
 
         ViewCompat.setOnApplyWindowInsetsListener(view) { _, compat ->
             val bars = compat.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -111,7 +227,7 @@ class ChatFragment : BaseFragment<FragmentChatBinding>(FragmentChatBinding::infl
             val ime = compat.getInsets(WindowInsetsCompat.Type.ime())
             val bottomInset = max(bars.bottom, max(gestures.bottom, ime.bottom))
             appBarLayout.updatePadding(left = bars.left, top = bars.top, right = bars.right)
-            bottomBar.updatePadding(left = bars.left, right = bars.right, bottom = bottomInset)
+            composerContainer.updatePadding(left = bars.left, right = bars.right, bottom = bottomInset)
             messages.updatePadding(left = bars.left, right = bars.right)
             compat
         }
@@ -161,11 +277,7 @@ class ChatFragment : BaseFragment<FragmentChatBinding>(FragmentChatBinding::infl
             findNavController().navigateUp()
         }
 
-        // Keep Messaging-goplay 9-patch compose shape while applying theme-specific input color.
-        outgoingMessage.background?.mutate()?.setColorFilter(
-            ContextCompat.getColor(requireContext(), R.color.mg_input_background),
-            PorterDuff.Mode.SRC_IN,
-        )
+        applyComposerUiStyle()
 
         toolbar.inflateMenu(R.menu.chat_options_menu)
         toolbar.setOnMenuItemClickListener { item ->
@@ -226,6 +338,27 @@ class ChatFragment : BaseFragment<FragmentChatBinding>(FragmentChatBinding::infl
                         .show()
                     true
                 }
+                R.id.action_chat_background -> {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle(R.string.action_chat_background)
+                        .setItems(
+                            arrayOf(
+                                getString(R.string.chat_background_set),
+                                getString(R.string.chat_background_clear),
+                            ),
+                        ) { _, which ->
+                            when (which) {
+                                0 -> chatBackgroundPickerLauncher.launch(arrayOf("image/*"))
+                                1 -> {
+                                    viewModel.contact.value?.chatBackgroundUri?.let { deleteLocalChatBackgroundIfOwned(it) }
+                                    applyChatBackground("")
+                                    viewModel.setChatBackgroundUri(PublicKey(contactPubKey), "")
+                                }
+                            }
+                        }
+                        .show()
+                    true
+                }
                 R.id.call -> {
                     if (!viewModel.callingNeedsConfirmation()) {
                         navigateToCallScreen()
@@ -252,8 +385,33 @@ class ChatFragment : BaseFragment<FragmentChatBinding>(FragmentChatBinding::infl
             )
         }
 
-        val adapter = ChatAdapter(layoutInflater, resources)
-        messages.adapter = adapter
+        chatAdapter = ChatAdapter(layoutInflater, resources)
+        chatAdapter.material3StyleEnabled = viewModel.useMaterial3Ui()
+        messages.adapter = chatAdapter
+        mediaPhotoGridAdapter = MediaPhotoGridAdapter { uri ->
+            viewModel.setActiveChat(PublicKey(contactPubKey))
+            viewModel.createFt(uri)
+            mediaPickerPanel.isVisible = false
+            hideVoiceRecorderPanel()
+            hidePhotosPanel()
+        }
+        mediaPickerPhotosGrid.layoutManager = GridLayoutManager(requireContext(), 3)
+        mediaPickerPhotosGrid.adapter = mediaPhotoGridAdapter
+        mediaCameraSurface.holder.addCallback(
+            object : SurfaceHolder.Callback {
+                override fun surfaceCreated(holder: SurfaceHolder) {
+                    mediaCameraSurfaceReady = true
+                    openEmbeddedCameraIfReady(holder)
+                }
+
+                override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) = Unit
+
+                override fun surfaceDestroyed(holder: SurfaceHolder) {
+                    mediaCameraSurfaceReady = false
+                    closeEmbeddedCamera()
+                }
+            },
+        )
         val emptyMessagesView = noMessagesView
         emptyMessagesView.setImageHint(R.drawable.ic_oobe_freq_list)
         emptyMessagesView.setTextHint(R.string.chat_empty_text)
@@ -281,8 +439,24 @@ class ChatFragment : BaseFragment<FragmentChatBinding>(FragmentChatBinding::infl
             }.lowercase(Locale.getDefault())
 
             avatarImageView.setFrom(it)
-            adapter.activeContact = it
-            adapter.notifyDataSetChanged()
+            chatAdapter.activeContact = it
+            chatAdapter.notifyDataSetChanged()
+            
+            Log.d(TAG, "Observer update - Database background URI: '${it.chatBackgroundUri}', Last applied: '$lastAppliedBackgroundUri'")
+            
+            // Prevent race condition: database updates are async, so the observer may fire with
+            // stale data. If the database value is empty but we just applied a non-empty background,
+            // skip updating to avoid showing the cleared state before the database write completes.
+            // In all other cases, apply what the database has (could be a matching update, a different
+            // background if user changed devices, or an empty value if clearing was successful).
+            val skipUpdate = it.chatBackgroundUri.isBlank() && lastAppliedBackgroundUri.isNotBlank()
+            if (skipUpdate) {
+                Log.d(TAG, "Skipping stale observer update (database empty, locally applied: '$lastAppliedBackgroundUri')")
+            } else {
+                Log.d(TAG, "Applying background from database: '${it.chatBackgroundUri}'")
+                applyChatBackground(it.chatBackgroundUri)
+            }
+            
             toolbar.menu.findItem(R.id.action_archive)?.title = getString(
                 if (it.archived) R.string.action_unarchive else R.string.action_archive,
             )
@@ -336,32 +510,34 @@ class ChatFragment : BaseFragment<FragmentChatBinding>(FragmentChatBinding::infl
         ongoingCall.info.setOnClickListener { navigateToCallScreen() }
 
         viewModel.messages.observe(viewLifecycleOwner) {
-            adapter.messages = it
-            adapter.notifyDataSetChanged()
+            chatAdapter.messages = it
+            chatAdapter.notifyDataSetChanged()
             emptyMessagesView.visibility = if (it.isEmpty()) View.VISIBLE else View.GONE
         }
 
         viewModel.fileTransfers.observe(viewLifecycleOwner) {
             fts = it
-            adapter.fileTransfers = it
-            adapter.notifyDataSetChanged()
+            chatAdapter.fileTransfers = it
+            chatAdapter.notifyDataSetChanged()
         }
 
         messages.setOnItemClickListener { _, view, position, _ ->
             when (view.id) {
-                R.id.accept -> viewModel.acceptFt(adapter.messages[position].correlationId)
-                R.id.reject, R.id.cancel -> viewModel.rejectFt(adapter.messages[position].correlationId)
+                R.id.accept -> viewModel.acceptFt(chatAdapter.messages[position].correlationId)
+                R.id.reject, R.id.cancel -> viewModel.rejectFt(chatAdapter.messages[position].correlationId)
                 R.id.fileTransfer -> {
-                    val id = adapter.messages[position].correlationId
-                    val ft = adapter.fileTransfers.find { it.id == id } ?: return@setOnItemClickListener
+                    val id = chatAdapter.messages[position].correlationId
+                    val ft = chatAdapter.fileTransfers.find { it.id == id } ?: return@setOnItemClickListener
+                    if (chatAdapter.onFileTransferClicked(ft)) return@setOnItemClickListener
                     if (ft.outgoing) return@setOnItemClickListener
                     if (!ft.isComplete()) return@setOnItemClickListener
                     if (!ft.destination.startsWith("file://")) return@setOnItemClickListener
                     val contentType = URLConnection.guessContentTypeFromName(ft.fileName)
+                    val filePath = ft.destination.toUri().path ?: return@setOnItemClickListener
                     val uri = FileProvider.getUriForFile(
                         requireContext(),
                         "${requireContext().packageName}.fileprovider",
-                        File(ft.destination.toUri().path!!),
+                        File(filePath),
                     )
                     val shareIntent = Intent(Intent.ACTION_VIEW).apply {
                         putExtra(Intent.EXTRA_TITLE, ft.fileName)
@@ -383,7 +559,7 @@ class ChatFragment : BaseFragment<FragmentChatBinding>(FragmentChatBinding::infl
         }
 
         messages.setOnItemLongClickListener { _, _, position, _ ->
-            val message = adapter.messages.getOrNull(position) ?: return@setOnItemLongClickListener false
+            val message = chatAdapter.messages.getOrNull(position) ?: return@setOnItemLongClickListener false
             startMessageActionMode(message)
             true
         }
@@ -393,12 +569,130 @@ class ChatFragment : BaseFragment<FragmentChatBinding>(FragmentChatBinding::infl
 
         attach.setOnClickListener {
             WindowInsetsControllerCompat(requireActivity().window, view).hide(WindowInsetsCompat.Type.ime())
+            mediaPickerPanel.isVisible = !mediaPickerPanel.isVisible
+            if (mediaPickerPanel.isVisible) {
+                hideCameraPanel()
+                hideVoiceRecorderPanel()
+                hidePhotosPanel()
+            }
+        }
+
+        mediaPickerCamera.setOnClickListener {
+            hideVoiceRecorderPanel()
+            hidePhotosPanel()
+            if (ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    android.Manifest.permission.CAMERA,
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                showCameraPanel()
+            } else {
+                cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+            }
+        }
+
+        mediaPickerPhotos.setOnClickListener {
+            hideVoiceRecorderPanel()
+            hideCameraPanel()
+            if (canReadPhotos()) {
+                showPhotosPanel()
+            } else {
+                photosPermissionLauncher.launch(photoPermission())
+            }
+        }
+
+        mediaPickerVoice.setOnClickListener {
+            hideCameraPanel()
+            if (ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    android.Manifest.permission.RECORD_AUDIO,
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                showVoiceRecorderPanel()
+            } else {
+                recordAudioPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
+            }
+        }
+
+        mediaPickerFile.setOnClickListener {
+            hideVoiceRecorderPanel()
+            hidePhotosPanel()
+            hideCameraPanel()
             attachFilesLauncher.launch(arrayOf("*/*"))
+            mediaPickerPanel.isVisible = false
+        }
+
+        mediaCameraCapture.setOnClickListener { captureEmbeddedPhoto() }
+
+        voiceRecordButton.setOnTouchListener { _, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    if (!voiceMemoRecording) {
+                        clearVoiceMemoPreview(deleteFile = true)
+                        startVoiceMemoRecording()
+                    }
+                    true
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    if (voiceMemoRecording) {
+                        val heldFor = SystemClock.elapsedRealtime() - voiceMemoStartedAt
+                        stopVoiceMemoRecording(keepForPreview = heldFor >= VOICE_MEMO_MIN_DURATION_MS)
+                        if (heldFor < VOICE_MEMO_MIN_DURATION_MS) {
+                            voiceHintText.setTypeface(null, Typeface.BOLD)
+                        }
+                    }
+                    true
+                }
+                else -> true
+            }
+        }
+
+        voicePreviewPlayPauseButton.setOnClickListener {
+            toggleVoiceMemoPreviewPlayback()
+        }
+        voicePreviewSeekBar.setOnSeekBarChangeListener(
+            object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                    if (fromUser) {
+                        updateVoicePreviewUi(progress, voiceMemoPreviewDurationMs)
+                    }
+                }
+
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {
+                    voiceMemoPreviewSeeking = true
+                }
+
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                    val player = voiceMemoPlayer ?: run {
+                        voiceMemoPreviewSeeking = false
+                        return
+                    }
+                    val progress = seekBar?.progress ?: 0
+                    player.seekTo(progress)
+                    voiceMemoPreviewSeeking = false
+                    updateVoicePreviewUi(progress, voiceMemoPreviewDurationMs)
+                }
+            },
+        )
+        voicePreviewSendInline.setOnClickListener {
+            sendVoiceMemoPreview()
+        }
+        voicePreviewDiscardInline.setOnClickListener {
+            clearVoiceMemoPreview(deleteFile = true)
+            updateVoiceRecorderIdleUi()
         }
 
         outgoingMessage.doAfterTextChanged {
             viewModel.setTyping(outgoingMessage.text.isNotEmpty())
             updateActions()
+        }
+        outgoingMessage.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                collapseMediaPickerForTyping()
+            }
+        }
+        outgoingMessage.setOnClickListener {
+            collapseMediaPickerForTyping()
         }
 
         updateActions()
@@ -410,8 +704,17 @@ class ChatFragment : BaseFragment<FragmentChatBinding>(FragmentChatBinding::infl
 
     override fun onPause() {
         messageActionMode?.finish()
+        if (voiceMemoRecording) {
+            stopVoiceMemoRecording(keepForPreview = false)
+        }
+        clearVoiceMemoPreview(deleteFile = false)
+        closeEmbeddedCamera()
+        if (::chatAdapter.isInitialized) {
+            chatAdapter.releaseAudio()
+        }
         viewModel.setDraft(binding.outgoingMessage.text.toString())
         viewModel.setActiveChat(PublicKey(""))
+        lastAppliedBackgroundUri = ""  // Reset tracking when leaving this chat
         super.onPause()
     }
 
@@ -560,6 +863,371 @@ class ChatFragment : BaseFragment<FragmentChatBinding>(FragmentChatBinding::infl
         attach.isEnabled = viewModel.contactOnline
         attach.clearColorFilter()
         attach.alpha = if (attach.isEnabled) 1.0f else 0.45f
+        if (!attach.isEnabled || send.isVisible) {
+            if (voiceMemoRecording) {
+                stopVoiceMemoRecording(keepForPreview = false)
+            } else {
+                voiceMemoFile?.delete()
+                voiceMemoFile = null
+            }
+            clearVoiceMemoPreview(deleteFile = true)
+            hideCameraPanel()
+            mediaPickerPanel.isVisible = false
+            hideVoiceRecorderPanel()
+        }
+    }
+
+    private fun canReadPhotos(): Boolean =
+        ContextCompat.checkSelfPermission(requireContext(), photoPermission()) == PackageManager.PERMISSION_GRANTED
+
+    private fun photoPermission(): String =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            android.Manifest.permission.READ_MEDIA_IMAGES
+        } else {
+            android.Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+
+    private fun showPhotosPanel() {
+        binding.mediaPickerPanel.isVisible = true
+        binding.mediaPickerContent.isVisible = true
+        binding.mediaPickerCameraChooser.isVisible = false
+        closeEmbeddedCamera()
+        binding.mediaPickerPhotosGrid.isVisible = true
+        binding.mediaPickerPhotos.isActivated = true
+        binding.mediaPickerCamera.isActivated = false
+        binding.mediaPickerVoice.isActivated = false
+        binding.mediaPickerFile.isActivated = false
+        loadPhotosIntoPanel()
+    }
+
+    private fun hidePhotosPanel() {
+        binding.mediaPickerPhotosGrid.isVisible = false
+        binding.mediaPickerPhotosEmpty.isVisible = false
+        binding.mediaPickerPhotos.isActivated = false
+    }
+
+    private fun loadPhotosIntoPanel() {
+        val projection = arrayOf(MediaStore.Images.Media._ID)
+        val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
+        val items = mutableListOf<Uri>()
+        requireContext().contentResolver.query(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            projection,
+            null,
+            null,
+            sortOrder,
+        )?.use { cursor ->
+            val idIdx = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+            while (cursor.moveToNext() && items.size < 200) {
+                val id = cursor.getLong(idIdx)
+                val uri = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id.toString())
+                items += uri
+            }
+        }
+        mediaPhotoGridAdapter.submitItems(items)
+        binding.mediaPickerPhotosEmpty.isVisible = items.isEmpty()
+    }
+
+    private fun showCameraPanel() {
+        binding.mediaPickerPanel.isVisible = true
+        binding.mediaPickerContent.isVisible = true
+        binding.mediaPickerCameraChooser.isVisible = true
+        binding.mediaPickerPhotosGrid.isVisible = false
+        binding.mediaPickerPhotosEmpty.isVisible = false
+        binding.mediaPickerVoiceChooser.isVisible = false
+        binding.mediaPickerCamera.isActivated = true
+        binding.mediaPickerPhotos.isActivated = false
+        binding.mediaPickerVoice.isActivated = false
+        binding.mediaPickerFile.isActivated = false
+        openEmbeddedCameraIfReady(binding.mediaCameraSurface.holder)
+    }
+
+    private fun hideCameraPanel() {
+        binding.mediaPickerCameraChooser.isVisible = false
+        binding.mediaPickerCamera.isActivated = false
+        closeEmbeddedCamera()
+    }
+
+    private fun openEmbeddedCameraIfReady(holder: SurfaceHolder) {
+        if (!mediaCameraSurfaceReady || !binding.mediaPickerCameraChooser.isVisible || mediaCamera != null) return
+        try {
+            val opened = Camera.open() ?: return
+            mediaCamera = opened
+            opened.setPreviewDisplay(holder)
+            opened.setDisplayOrientation(90)
+            opened.startPreview()
+        } catch (_: Exception) {
+            closeEmbeddedCamera()
+            Toast.makeText(requireContext(), R.string.media_picker_camera_open_failed, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun closeEmbeddedCamera() {
+        mediaCamera?.apply {
+            stopPreview()
+            release()
+        }
+        mediaCamera = null
+    }
+
+    private fun captureEmbeddedPhoto() {
+        val cam = mediaCamera ?: return
+        cam.takePicture(null, null) { data, camera ->
+            runCatching {
+                val file = File(requireContext().cacheDir.resolve("shared_images"), "camera_${System.currentTimeMillis()}.jpg")
+                file.parentFile?.mkdirs()
+                file.outputStream().use { it.write(data) }
+                val uri = FileProvider.getUriForFile(
+                    requireContext(),
+                    "${requireContext().packageName}.fileprovider",
+                    file,
+                )
+                viewModel.setActiveChat(PublicKey(contactPubKey))
+                viewModel.createFt(uri)
+                binding.mediaPickerPanel.isVisible = false
+                hideCameraPanel()
+            }.onFailure {
+                Toast.makeText(requireContext(), R.string.media_picker_camera_open_failed, Toast.LENGTH_LONG).show()
+                runCatching { camera.startPreview() }
+            }
+        }
+    }
+
+    private fun startVoiceMemoRecording() {
+        clearVoiceMemoPreview(deleteFile = true)
+        val cacheDir = File(requireContext().cacheDir, VOICE_MEMO_CACHE_SUBDIR)
+        cacheDir.mkdirs()
+        val outputFile = File(cacheDir, "voice_${System.currentTimeMillis()}.m4a")
+        val recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            MediaRecorder(requireContext())
+        } else {
+            @Suppress("DEPRECATION")
+            MediaRecorder()
+        }
+        try {
+            recorder.setAudioSource(MediaRecorder.AudioSource.MIC)
+            recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+            recorder.setAudioEncodingBitRate(128_000)
+            recorder.setAudioSamplingRate(44_100)
+            recorder.setOutputFile(outputFile.absolutePath)
+            recorder.prepare()
+            recorder.start()
+            voiceMemoRecorder = recorder
+            voiceMemoFile = outputFile
+            voiceMemoRecording = true
+            voiceMemoStartedAt = SystemClock.elapsedRealtime()
+            binding.voicePreviewLayout.visibility = View.GONE
+            binding.voiceHintText.visibility = View.GONE
+            binding.voiceTimerText.visibility = View.VISIBLE
+            binding.voiceTimerText.base = SystemClock.elapsedRealtime()
+            binding.voiceTimerText.start()
+            updateVoiceButtonAppearance(isRecording = true)
+        } catch (_: Throwable) {
+            recorder.release()
+            voiceMemoRecorder = null
+            voiceMemoFile = null
+            voiceMemoRecording = false
+            updateVoiceButtonAppearance(isRecording = false)
+            Toast.makeText(requireContext(), R.string.media_picker_voice_open_failed, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun stopVoiceMemoRecording(keepForPreview: Boolean) {
+        val recorder = voiceMemoRecorder ?: return
+        val file = voiceMemoFile
+        try {
+            recorder.stop()
+        } catch (_: Throwable) {
+            // Can throw when recording is too short.
+        } finally {
+            recorder.release()
+            voiceMemoRecorder = null
+            voiceMemoRecording = false
+            binding.voiceTimerText.stop()
+            binding.voiceTimerText.visibility = View.GONE
+            updateVoiceButtonAppearance(isRecording = false)
+        }
+
+        if (keepForPreview && file != null && file.exists() && file.length() > 0L) {
+            showVoiceMemoPreview(file)
+        } else {
+            file?.delete()
+            voiceMemoFile = null
+            updateVoiceRecorderIdleUi()
+        }
+
+        voiceMemoStartedAt = 0L
+    }
+
+    private fun showVoiceRecorderPanel() {
+        binding.mediaPickerPanel.isVisible = true
+        binding.mediaPickerContent.isVisible = true
+        binding.mediaPickerVoiceChooser.isVisible = true
+        binding.mediaPickerCameraChooser.isVisible = false
+        closeEmbeddedCamera()
+        binding.mediaPickerPhotosGrid.isVisible = false
+        binding.mediaPickerPhotosEmpty.isVisible = false
+        binding.mediaPickerVoice.isActivated = true
+        binding.mediaPickerCamera.isActivated = false
+        binding.mediaPickerPhotos.isActivated = false
+        binding.mediaPickerFile.isActivated = false
+        updateVoiceRecorderIdleUi()
+        updateVoiceButtonAppearance(isRecording = voiceMemoRecording)
+    }
+
+    private fun hideVoiceRecorderPanel() {
+        if (voiceMemoRecording) {
+            stopVoiceMemoRecording(keepForPreview = false)
+        }
+        clearVoiceMemoPreview(deleteFile = true)
+        binding.mediaPickerVoiceChooser.isVisible = false
+        binding.mediaPickerVoice.isActivated = false
+        if (!binding.mediaPickerPhotosGrid.isVisible && !binding.mediaPickerCameraChooser.isVisible) {
+            binding.mediaPickerContent.isVisible = false
+        }
+    }
+
+    private fun updateVoiceButtonAppearance(isRecording: Boolean) {
+        val bg = binding.voiceRecordButtonVisual.background as? GradientDrawable
+        val colorPrimary = resolveThemeColor(androidx.appcompat.R.attr.colorPrimary, R.color.colorPrimary)
+        if (isRecording) {
+            binding.voiceRecordButtonVisual.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP)
+            bg?.setColor(colorPrimary)
+        } else {
+            binding.voiceRecordButtonVisual.setColorFilter(
+                colorPrimary,
+                PorterDuff.Mode.SRC_ATOP,
+            )
+            bg?.setColor(Color.WHITE)
+        }
+    }
+
+    private fun resolveThemeColor(attr: Int, fallbackColorRes: Int): Int {
+        return AppColorResolver.resolve(requireContext(), attr, fallbackColorRes)
+    }
+
+    private fun updateVoiceRecorderIdleUi() {
+        if (voiceMemoRecording) return
+        binding.voiceTimerText.visibility = View.GONE
+        binding.voiceHintText.visibility = if (binding.voicePreviewLayout.isVisible) View.GONE else View.VISIBLE
+        binding.voiceHintText.setTypeface(null, Typeface.NORMAL)
+    }
+
+    private fun showVoiceMemoPreview(file: File) {
+        voiceMemoFile = file
+        releaseVoiceMemoPreviewPlayer()
+        voiceMemoPreviewDurationMs = 0
+        val player = MediaPlayer()
+        voiceMemoPlayer = player
+        runCatching {
+            player.setDataSource(file.absolutePath)
+            player.setOnPreparedListener { prepared ->
+                voiceMemoPreviewDurationMs = max(prepared.duration, 0)
+                binding.voicePreviewLayout.visibility = View.VISIBLE
+                updateVoicePreviewUi(0, voiceMemoPreviewDurationMs)
+                setVoicePreviewPlaying(false)
+            }
+            player.setOnCompletionListener { done ->
+                done.seekTo(0)
+                updateVoicePreviewUi(0, voiceMemoPreviewDurationMs)
+                setVoicePreviewPlaying(false)
+            }
+            player.setOnErrorListener { _, _, _ ->
+                clearVoiceMemoPreview(deleteFile = true)
+                true
+            }
+            player.prepareAsync()
+        }.onFailure {
+            clearVoiceMemoPreview(deleteFile = true)
+            Toast.makeText(requireContext(), R.string.media_picker_voice_open_failed, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun toggleVoiceMemoPreviewPlayback() {
+        val player = voiceMemoPlayer ?: return
+        if (player.isPlaying) {
+            player.pause()
+            setVoicePreviewPlaying(false)
+        } else {
+            player.start()
+            setVoicePreviewPlaying(true)
+        }
+    }
+
+    private fun setVoicePreviewPlaying(playing: Boolean) {
+        binding.voicePreviewPlayPauseButton.setImageResource(
+            if (playing) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,
+        )
+        if (playing) {
+            voicePreviewUiHandler.removeCallbacks(updateVoicePreviewProgress)
+            voicePreviewUiHandler.post(updateVoicePreviewProgress)
+        } else {
+            voicePreviewUiHandler.removeCallbacks(updateVoicePreviewProgress)
+        }
+    }
+
+    private fun updateVoicePreviewUi(positionMs: Int, durationMs: Int) {
+        binding.voicePreviewTimer.text = formatAudioProgress(positionMs, durationMs)
+        binding.voicePreviewSeekBar.max = max(durationMs, 1)
+        binding.voicePreviewSeekBar.progress = positionMs.coerceAtMost(binding.voicePreviewSeekBar.max)
+        binding.voicePreviewSeekBar.isEnabled = durationMs > 0
+        val progressDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.audio_progress_bar_progress)
+        if (progressDrawable != null) {
+            binding.voicePreviewSeekBar.progressDrawable =
+                ClipDrawable(progressDrawable, android.view.Gravity.START, ClipDrawable.HORIZONTAL)
+        }
+        binding.voicePreviewSeekBar.background =
+            ContextCompat.getDrawable(requireContext(), R.drawable.audio_progress_bar_background_outgoing)
+    }
+
+    private fun sendVoiceMemoPreview() {
+        val file = voiceMemoFile ?: return
+        if (!file.exists() || file.length() == 0L) {
+            clearVoiceMemoPreview(deleteFile = true)
+            return
+        }
+        viewModel.setActiveChat(PublicKey(contactPubKey))
+        val uri = FileProvider.getUriForFile(
+            requireContext(),
+            "${requireContext().packageName}.fileprovider",
+            file,
+        )
+        viewModel.createFt(uri)
+        clearVoiceMemoPreview(deleteFile = false)
+        voiceMemoFile = null
+        binding.mediaPickerPanel.isVisible = false
+        hideVoiceRecorderPanel()
+    }
+
+    private fun clearVoiceMemoPreview(deleteFile: Boolean) {
+        setVoicePreviewPlaying(false)
+        releaseVoiceMemoPreviewPlayer()
+        binding.voicePreviewLayout.visibility = View.GONE
+        voiceMemoPreviewDurationMs = 0
+        if (deleteFile) {
+            voiceMemoFile?.delete()
+            voiceMemoFile = null
+        }
+    }
+
+    private fun releaseVoiceMemoPreviewPlayer() {
+        voicePreviewUiHandler.removeCallbacks(updateVoicePreviewProgress)
+        voiceMemoPlayer?.release()
+        voiceMemoPlayer = null
+        voiceMemoPreviewSeeking = false
+    }
+
+    private fun formatAudioProgress(positionMs: Int, durationMs: Int): String {
+        if (durationMs <= 0) return formatAudioTime(positionMs)
+        return "${formatAudioTime(positionMs)} / ${formatAudioTime(durationMs)}"
+    }
+
+    private fun formatAudioTime(ms: Int): String {
+        val totalSeconds = ms / 1000
+        val minutes = totalSeconds / 60
+        val seconds = totalSeconds % 60
+        return String.format(Locale.getDefault(), "%d:%02d", minutes, seconds)
     }
 
     private fun navigateToCallScreen() {
@@ -568,5 +1236,101 @@ class ChatFragment : BaseFragment<FragmentChatBinding>(FragmentChatBinding::infl
             R.id.action_chatFragment_to_callFragment,
             bundleOf(CONTACT_PUBLIC_KEY to contactPubKey),
         )
+    }
+
+    private fun applyComposerUiStyle() = binding.run {
+        if (viewModel.useMaterial3Ui()) {
+            outgoingMessage.setBackgroundResource(R.drawable.msg_bubble_input_m3)
+        } else {
+            outgoingMessage.setBackgroundResource(R.drawable.msg_bubble_input)
+            outgoingMessage.background?.mutate()?.setColorFilter(
+                ContextCompat.getColor(requireContext(), R.color.mg_input_background),
+                PorterDuff.Mode.SRC_IN,
+            )
+        }
+    }
+
+    private fun applyChatBackground(backgroundUri: String) = binding.run {
+        Log.d(TAG, "Applying chat background: '$backgroundUri'")
+        lastAppliedBackgroundUri = backgroundUri  // Track what we're applying
+        
+        if (backgroundUri.isBlank()) {
+            Log.d(TAG, "Background URI is blank, clearing background")
+            Picasso.get().cancelRequest(chatBackgroundImage)
+            chatBackgroundImage.setImageDrawable(null)
+            chatBackgroundImage.visibility = View.GONE
+            return
+        }
+
+        val uri = Uri.parse(backgroundUri)
+        Log.d(TAG, "Background URI parsed: $uri, scheme: ${uri.scheme}")
+        chatBackgroundImage.visibility = View.VISIBLE
+        
+        // Invalidate Picasso cache for this URI to ensure we load the latest image
+        // This is important when the user changes the background since the filename stays the same
+        Log.d(TAG, "Invalidating Picasso cache for URI: $uri")
+        Picasso.get().invalidate(uri)
+        
+        val request = Picasso.get().load(uri)
+        Log.d(TAG, "Loading background image with Picasso from: $uri")
+        request
+            .fit()
+            .centerCrop()
+            .noFade()
+            .into(chatBackgroundImage, object : Callback {
+                override fun onSuccess() {
+                    Log.d(TAG, "Background image loaded successfully")
+                }
+                override fun onError(e: Exception?) {
+                    Log.e(TAG, "Failed to load chat background: $backgroundUri", e)
+                    Log.d(TAG, "Attempting fallback with setImageURI")
+                    chatBackgroundImage.setImageURI(uri)
+                }
+            })
+    }
+
+    private fun copyChatBackgroundToPrivateStorage(source: Uri): String? {
+        return runCatching {
+            val dir = File(requireContext().filesDir, "chat_bg").apply { mkdirs() }
+            val target = File(dir, "${contactPubKey.lowercase(Locale.getDefault())}.jpg")
+            Log.d(TAG, "Copying background from $source to ${target.absolutePath}")
+            requireContext().contentResolver.openInputStream(source).use { input ->
+                if (input == null) {
+                    throw IllegalStateException("Unable to open selected image")
+                }
+                FileOutputStream(target).use { output -> input.copyTo(output) }
+            }
+            val targetUri = Uri.fromFile(target).toString()
+            Log.d(TAG, "Background copied successfully to: $targetUri")
+            // Invalidate Picasso cache to ensure the new image is loaded, not a cached old one
+            Picasso.get().invalidate(Uri.parse(targetUri))
+            Log.d(TAG, "Picasso cache invalidated for: $targetUri")
+            targetUri
+        }.onFailure {
+            Log.e(TAG, "Failed to copy chat background", it)
+            Toast.makeText(requireContext(), R.string.chat_background_permission_error, Toast.LENGTH_LONG).show()
+        }.getOrNull()
+    }
+
+    private fun deleteLocalChatBackgroundIfOwned(uriString: String) {
+        val uri = Uri.parse(uriString)
+        if (uri.scheme != "file") return
+        val path = uri.path ?: return
+        val ownedDir = File(requireContext().filesDir, "chat_bg").absolutePath
+        if (path.startsWith(ownedDir)) {
+            runCatching { File(path).delete() }
+        }
+    }
+
+    private fun collapseMediaPickerForTyping() {
+        if (!binding.mediaPickerPanel.isVisible) return
+        if (voiceMemoRecording) {
+            stopVoiceMemoRecording(keepForPreview = false)
+        }
+        clearVoiceMemoPreview(deleteFile = true)
+        hideCameraPanel()
+        hideVoiceRecorderPanel()
+        hidePhotosPanel()
+        binding.mediaPickerPanel.isVisible = false
     }
 }

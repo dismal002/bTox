@@ -12,12 +12,12 @@ import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import java.text.DateFormat
 import java.util.concurrent.TimeUnit
 import com.dismal.btox.R
 import com.dismal.btox.databinding.ContactListViewItemBinding
 import com.dismal.btox.databinding.FriendRequestItemBinding
+import com.dismal.btox.settings.AppColorResolver
 import com.dismal.btox.ui.AvatarImageView
 import ltd.evilcorp.core.vo.Contact
 import ltd.evilcorp.core.vo.FriendRequest
@@ -25,6 +25,10 @@ import ltd.evilcorp.core.vo.FriendRequest
 enum class ContactListItemType {
     FriendRequest,
     Contact,
+}
+
+private fun resolveThemeColor(context: Context, attr: Int, fallbackRes: Int): Int {
+    return AppColorResolver.resolve(context, attr, fallbackRes)
 }
 
 class ContactAdapter(private val inflater: LayoutInflater, private val context: Context) : BaseAdapter() {
@@ -103,7 +107,7 @@ class ContactAdapter(private val inflater: LayoutInflater, private val context: 
                         draftMessage.isNotEmpty() -> {
                             vh.statusMessage.text = context.getString(R.string.draft_message, draftMessage)
                             vh.statusMessage.setTextColor(
-                                ContextCompat.getColor(context, R.color.colorAccent),
+                                resolveThemeColor(context, androidx.appcompat.R.attr.colorAccent, R.color.colorAccent),
                             )
                         }
                         else -> {

@@ -4,8 +4,12 @@
 
 package com.dismal.btox.ui.chat
 
+import android.media.MediaPlayer
 import android.content.res.Resources
+import android.graphics.drawable.ClipDrawable
 import android.graphics.PorterDuff
+import android.os.Handler
+import android.os.Looper
 import android.text.format.DateUtils
 import android.text.format.Formatter
 import android.util.Log
@@ -17,17 +21,23 @@ import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.ImageButton
 import android.widget.ListView
 import android.widget.ProgressBar
 import android.widget.RelativeLayout
+import android.widget.SeekBar
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import com.squareup.picasso.Picasso
+import java.io.File
 import java.net.URLConnection
 import java.util.Calendar
 import java.util.Locale
+import kotlin.math.max
 import kotlin.math.roundToInt
 import com.dismal.btox.R
+import com.dismal.btox.settings.AppColorResolver
 import com.dismal.btox.ui.AvatarImageView
 import ltd.evilcorp.core.vo.Contact
 import ltd.evilcorp.core.vo.FileTransfer
@@ -40,6 +50,10 @@ import ltd.evilcorp.core.vo.isStarted
 
 private const val TAG = "ChatAdapter"
 private const val IMAGE_TO_SCREEN_RATIO = 0.9
+
+private fun resolveThemeColor(context: android.content.Context, attr: Int): Int {
+    return AppColorResolver.resolve(context, attr, R.color.colorPrimary)
+}
 
 private fun FileTransfer.isImage() = try {
     URLConnection.guessContentTypeFromName(fileName).startsWith("image/")
@@ -89,12 +103,32 @@ private class FileTransferViewHolder(row: View) {
     val cancel: Button = row.findViewById(R.id.cancel)
     val completedLayout: View = row.findViewById(R.id.completedLayout)
     val imagePreview: ImageView = row.findViewById(R.id.imagePreview)
+    val audioPlayerLayout: View = row.findViewById(R.id.audioPlayerLayout)
+    val audioPlayPauseButton: ImageButton = row.findViewById(R.id.audioPlayPauseButton)
+    val audioTimer: TextView = row.findViewById(R.id.audioTimer)
+    val audioSeekBar: SeekBar = row.findViewById(R.id.audioSeekBar)
 }
 
 class ChatAdapter(private val inflater: LayoutInflater, private val resources: Resources) : BaseAdapter() {
     var messages: List<Message> = listOf()
     var fileTransfers: List<FileTransfer> = listOf()
     var activeContact: Contact? = null
+    var material3StyleEnabled: Boolean = false
+
+    private var audioPlayer: MediaPlayer? = null
+    private var activeAudioTransferId: Int? = null
+    private var activeAudioDurationMs: Int = 0
+    private var userSeekingAudio = false
+    private val audioUiHandler = Handler(Looper.getMainLooper())
+    private val updateAudioProgress = object : Runnable {
+        override fun run() {
+            val player = audioPlayer ?: return
+            if (player.isPlaying && !userSeekingAudio) {
+                notifyDataSetChanged()
+                audioUiHandler.postDelayed(this, 250L)
+            }
+        }
+    }
 
     private fun formatMessageTimestamp(timestamp: Long): CharSequence {
         val context = inflater.context
@@ -198,19 +232,29 @@ class ChatAdapter(private val inflater: LayoutInflater, private val resources: R
                 val bubble = vh.message.parent as? View
                 when (type) {
                     ChatItemType.ReceivedMessage -> {
-                        bubble?.background?.mutate()?.setColorFilter(
-                            ContextCompat.getColor(inflater.context, R.color.message_bubble_incoming_bg),
-                            PorterDuff.Mode.SRC_IN,
-                        )
+                        if (material3StyleEnabled) {
+                            bubble?.setBackgroundResource(R.drawable.msg_bubble_incoming_m3)
+                        } else {
+                            bubble?.setBackgroundResource(R.drawable.msg_bubble_incoming)
+                            bubble?.background?.mutate()?.setColorFilter(
+                                resolveThemeColor(inflater.context, androidx.appcompat.R.attr.colorPrimary),
+                                PorterDuff.Mode.SRC_IN,
+                            )
+                        }
                         vh.message.setTextColor(ContextCompat.getColor(inflater.context, android.R.color.white))
                         vh.message.setLinkTextColor(ContextCompat.getColor(inflater.context, android.R.color.white))
                         vh.timestamp.setTextColor(ContextCompat.getColor(inflater.context, R.color.timestamp_text_incoming))
                     }
                     ChatItemType.SentMessage -> {
-                        bubble?.background?.mutate()?.setColorFilter(
-                            ContextCompat.getColor(inflater.context, R.color.message_bubble_outgoing_bg),
-                            PorterDuff.Mode.SRC_IN,
-                        )
+                        if (material3StyleEnabled) {
+                            bubble?.setBackgroundResource(R.drawable.msg_bubble_outgoing_m3)
+                        } else {
+                            bubble?.setBackgroundResource(R.drawable.msg_bubble_outgoing)
+                            bubble?.background?.mutate()?.setColorFilter(
+                                ContextCompat.getColor(inflater.context, R.color.message_bubble_outgoing_bg),
+                                PorterDuff.Mode.SRC_IN,
+                            )
+                        }
                         vh.message.setTextColor(ContextCompat.getColor(inflater.context, android.R.color.black))
                         vh.message.setLinkTextColor(ContextCompat.getColor(inflater.context, android.R.color.black))
                         vh.timestamp.setTextColor(ContextCompat.getColor(inflater.context, R.color.timestamp_text_outgoing))
@@ -271,7 +315,9 @@ class ChatAdapter(private val inflater: LayoutInflater, private val resources: R
                 vh.reject.setOnTouchListener(touchListener)
                 vh.cancel.setOnTouchListener(touchListener)
 
-                if (fileTransfer.isImage() && (fileTransfer.isComplete() || fileTransfer.outgoing)) {
+                val playableAudio = isPlayableAudio(fileTransfer)
+
+                if (!playableAudio && fileTransfer.isImage() && (fileTransfer.isComplete() || fileTransfer.outgoing)) {
                     vh.completedLayout.visibility = View.VISIBLE
                     val targetWidth = Resources.getSystem().displayMetrics.widthPixels * IMAGE_TO_SCREEN_RATIO
                     Picasso.get()
@@ -282,6 +328,7 @@ class ChatAdapter(private val inflater: LayoutInflater, private val resources: R
                 } else {
                     vh.completedLayout.visibility = View.GONE
                 }
+                vh.audioPlayerLayout.visibility = if (playableAudio) View.VISIBLE else View.GONE
 
                 vh.state.visibility = View.GONE
                 if (fileTransfer.isRejected() || fileTransfer.isComplete()) {
@@ -289,7 +336,7 @@ class ChatAdapter(private val inflater: LayoutInflater, private val resources: R
                     vh.cancelLayout.visibility = View.GONE
                     vh.progress.visibility = View.GONE
                     vh.state.visibility =
-                        if (fileTransfer.isImage() && fileTransfer.isComplete()) View.GONE else View.VISIBLE
+                        if ((fileTransfer.isImage() || playableAudio) && fileTransfer.isComplete()) View.GONE else View.VISIBLE
                 } else if (!fileTransfer.isStarted()) {
                     if (fileTransfer.outgoing) {
                         vh.acceptLayout.visibility = View.GONE
@@ -314,6 +361,12 @@ class ChatAdapter(private val inflater: LayoutInflater, private val resources: R
                 val stateId = if (fileTransfer.isRejected()) R.string.cancelled else R.string.completed
                 vh.state.text = resources.getString(stateId).lowercase(Locale.getDefault())
                 vh.timestamp.text = formatMessageTimestamp(message.timestamp)
+                if (playableAudio) {
+                    bindAudioControls(vh, fileTransfer)
+                } else {
+                    vh.audioSeekBar.setOnSeekBarChangeListener(null)
+                    vh.audioPlayPauseButton.setOnClickListener(null)
+                }
 
                 vh.timestamp.visibility = if (position == messages.lastIndex) {
                     View.VISIBLE
@@ -335,4 +388,151 @@ class ChatAdapter(private val inflater: LayoutInflater, private val resources: R
                 view
             }
         }
+
+    fun onFileTransferClicked(ft: FileTransfer): Boolean {
+        if (!isPlayableAudio(ft)) return false
+        toggleAudio(ft)
+        return true
+    }
+
+    fun releaseAudio() {
+        stopAudioProgressUpdates()
+        audioPlayer?.release()
+        audioPlayer = null
+        activeAudioTransferId = null
+        activeAudioDurationMs = 0
+        notifyDataSetChanged()
+    }
+
+    private fun bindAudioControls(vh: FileTransferViewHolder, ft: FileTransfer) {
+        val isActive = activeAudioTransferId == ft.id
+        val player = if (isActive) audioPlayer else null
+        val position = player?.currentPosition ?: 0
+        val duration = if (isActive) max(activeAudioDurationMs, 0) else 0
+
+        vh.audioPlayPauseButton.setImageResource(
+            if (player?.isPlaying == true) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,
+        )
+
+        vh.audioTimer.text = formatAudioProgress(position, duration)
+        vh.audioSeekBar.max = max(duration, 1)
+        vh.audioSeekBar.progress = position.coerceAtMost(vh.audioSeekBar.max)
+        vh.audioSeekBar.isEnabled = isActive && duration > 0
+
+        val progressDrawable = ContextCompat.getDrawable(inflater.context, R.drawable.audio_progress_bar_progress)
+        if (progressDrawable != null) {
+            vh.audioSeekBar.progressDrawable =
+                ClipDrawable(progressDrawable, Gravity.START, ClipDrawable.HORIZONTAL)
+        }
+        vh.audioSeekBar.background =
+            ContextCompat.getDrawable(inflater.context, R.drawable.audio_progress_bar_background_outgoing)
+
+        vh.audioPlayPauseButton.setOnClickListener { toggleAudio(ft) }
+        vh.audioSeekBar.setOnSeekBarChangeListener(
+            object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                    if (fromUser && isActive) {
+                        vh.audioTimer.text = formatAudioProgress(progress, duration)
+                    }
+                }
+
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {
+                    if (isActive) userSeekingAudio = true
+                }
+
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                    if (!isActive) return
+                    val p = seekBar?.progress ?: 0
+                    audioPlayer?.seekTo(p)
+                    userSeekingAudio = false
+                }
+            },
+        )
+    }
+
+    private fun toggleAudio(ft: FileTransfer) {
+        if (activeAudioTransferId != ft.id) {
+            startAudio(ft)
+            return
+        }
+
+        val player = audioPlayer ?: return
+        if (player.isPlaying) {
+            player.pause()
+            stopAudioProgressUpdates()
+        } else {
+            player.start()
+            startAudioProgressUpdates()
+        }
+        notifyDataSetChanged()
+    }
+
+    private fun startAudio(ft: FileTransfer) {
+        val path = ft.destination.toUri().path ?: return
+        val file = File(path)
+        if (!file.exists()) return
+
+        releaseAudio()
+
+        val mp = MediaPlayer()
+        activeAudioTransferId = ft.id
+        activeAudioDurationMs = 0
+        audioPlayer = mp
+
+        runCatching {
+            mp.setDataSource(file.absolutePath)
+            mp.setOnPreparedListener { prepared ->
+                activeAudioDurationMs = max(prepared.duration, 0)
+                prepared.start()
+                startAudioProgressUpdates()
+                notifyDataSetChanged()
+            }
+            mp.setOnCompletionListener { done ->
+                done.seekTo(0)
+                stopAudioProgressUpdates()
+                notifyDataSetChanged()
+            }
+            mp.setOnErrorListener { _, _, _ ->
+                releaseAudio()
+                true
+            }
+            mp.prepareAsync()
+            notifyDataSetChanged()
+        }.onFailure {
+            releaseAudio()
+        }
+    }
+
+    private fun startAudioProgressUpdates() {
+        audioUiHandler.removeCallbacks(updateAudioProgress)
+        audioUiHandler.post(updateAudioProgress)
+    }
+
+    private fun stopAudioProgressUpdates() {
+        audioUiHandler.removeCallbacks(updateAudioProgress)
+        userSeekingAudio = false
+    }
+
+    private fun isAudioTransfer(ft: FileTransfer): Boolean =
+        URLConnection.guessContentTypeFromName(ft.fileName)?.startsWith("audio/") == true
+
+    private fun isPlayableAudio(ft: FileTransfer): Boolean {
+        if (!ft.isComplete()) return false
+        if (!isAudioTransfer(ft)) return false
+        if (!ft.destination.startsWith("file://")) return false
+        val path = ft.destination.toUri().path ?: return false
+        return File(path).exists()
+    }
+
+    private fun formatAudioProgress(positionMs: Int, durationMs: Int): String {
+        if (durationMs <= 0) return formatAudioTime(positionMs)
+        return "${formatAudioTime(positionMs)} / ${formatAudioTime(durationMs)}"
+    }
+
+    private fun formatAudioTime(ms: Int): String {
+        val totalSeconds = ms / 1000
+        val minutes = totalSeconds / 60
+        val seconds = totalSeconds % 60
+        return String.format(Locale.getDefault(), "%d:%02d", minutes, seconds)
+    }
 }

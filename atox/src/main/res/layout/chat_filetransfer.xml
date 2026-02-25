@@ -75,6 +75,55 @@
                     android:adjustViewBounds="true"
                     android:importantForAccessibility="no"/>
         </LinearLayout>
+        <FrameLayout
+                android:id="@+id/audioPlayerLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/attachment_audio_preview_background"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:visibility="gone">
+
+            <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                <ImageButton
+                        android:id="@+id/audioPlayPauseButton"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/audio_play_button_bg"
+                        android:contentDescription="@string/play_audio"
+                        android:padding="8dp"
+                        android:scaleType="center"
+                        android:src="@android:drawable/ic_media_play"
+                        android:tint="@android:color/white" />
+
+                <TextView
+                        android:id="@+id/audioTimer"
+                        android:layout_width="70dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="10dp"
+                        android:text="0:00"
+                        android:textColor="@color/mg_text_secondary"
+                        android:textSize="14sp" />
+
+                <SeekBar
+                        android:id="@+id/audioSeekBar"
+                        android:layout_width="0dp"
+                        android:layout_height="6dp"
+                        android:layout_weight="1"
+                        android:maxHeight="6dp"
+                        android:minHeight="6dp"
+                        android:padding="0dp"
+                        android:splitTrack="false"
+                        android:thumb="@drawable/audio_seekbar_thumb" />
+            </LinearLayout>
+        </FrameLayout>
     </LinearLayout>
     <TextView android:id="@+id/timestamp"
             style="@style/TextAppearance.AppCompat.Caption"

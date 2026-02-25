@@ -11,7 +11,7 @@
         android:id="@+id/app_bar"
         android:layout_width="match_parent"
         android:layout_height="380dp"
-        android:background="@color/aosp_contact_primary"
+        android:background="?attr/colorPrimary"
         android:fitsSystemWindows="true">
 
         <androidx.appcompat.widget.Toolbar
@@ -79,7 +79,7 @@
                         android:layout_height="24dp"
                         android:contentDescription="@string/tox_id"
                         android:src="@drawable/quantum_ic_phone_vd_theme_24"
-                        app:tint="@color/aosp_contact_primary" />
+                        app:tint="?attr/colorPrimary" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -113,7 +113,7 @@
                         android:layout_height="24dp"
                         android:contentDescription="@string/read_qr"
                         android:src="@drawable/ic_qr_code"
-                        app:tint="@color/aosp_contact_primary" />
+                        app:tint="?attr/colorPrimary" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
@@ -137,7 +137,7 @@
                         android:paddingHorizontal="16dp"
                         android:paddingTop="16dp"
                         android:paddingBottom="14dp"
-                        android:textColor="@color/aosp_contact_card_header_text"
+                        android:textColor="?attr/colorPrimary"
                         android:textSize="16sp"
                         tools:text="About Cameron" />
 

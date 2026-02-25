@@ -10,7 +10,7 @@
     <androidx.appcompat.widget.Toolbar android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/colorPrimary"
+        android:background="?attr/colorPrimary"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         app:title="@string/friend_request"/>
 
@@ -57,7 +57,7 @@
                 android:layout_marginEnd="8dp"
                 android:backgroundTint="@android:color/white"
                 android:textAllCaps="false"
-                android:textColor="@color/colorPrimaryDark"
+                android:textColor="?attr/colorPrimaryDark"
                 android:text="@string/reject"
                 app:layout_constraintEnd_toStartOf="@id/accept"
                 app:layout_constraintStart_toStartOf="parent"
@@ -66,7 +66,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:backgroundTint="@color/colorPrimary"
+                android:backgroundTint="?attr/colorPrimary"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
                 android:text="@string/accept"

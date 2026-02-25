@@ -47,7 +47,7 @@
         android:gravity="center"
         android:text="@string/github_link"
         android:textColor="@color/mg_text_secondary"
-        android:textColorLink="@color/colorPrimary"
+        android:textColorLink="?attr/colorPrimary"
         android:textSize="16sp" />
 
 </LinearLayout>

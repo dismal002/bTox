@@ -12,4 +12,10 @@
     <color name="mg_divider_on_primary">#55FFFFFF</color>
     <color name="mg_icon_tint">#FFCECECE</color>
     <color name="mg_timestamp_text">#99FFFFFF</color>
+    <color name="background_item_pressed">#33FFFFFF</color>
+    <color name="background_item_activated">#1FFFFFFF</color>
+    <color name="background_item_transparent">#00000000</color>
+    <color name="audio_record_control_button_stroke">#66FFFFFF</color>
+    <color name="audio_picker_hint_text_color">#99FFFFFF</color>
+    <color name="audio_picker_timer_text_color">#FFF1F1F1</color>
 </resources>

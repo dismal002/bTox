@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.dismal.btox.R
 import com.dismal.btox.settings.Settings
+import com.dismal.btox.settings.UiStyleMode
 import com.dismal.btox.ui.NotificationHelper
 import ltd.evilcorp.core.vo.ConnectionStatus
 import ltd.evilcorp.core.vo.Contact
@@ -74,6 +75,7 @@ class ChatViewModel @Inject constructor(
     val fileTransfers: LiveData<List<FileTransfer>> by lazy { fileTransferManager.transfersFor(publicKey).asLiveData() }
 
     fun callingNeedsConfirmation(): Boolean = settings.confirmCalling
+    fun useMaterial3Ui(): Boolean = settings.uiStyleMode == UiStyleMode.Material3
     val ongoingCall = callManager.inCall.asLiveData()
 
     val callState get() = contactManager.get(publicKey)
@@ -126,7 +128,7 @@ class ChatViewModel @Inject constructor(
             Log.i(TAG, "Clearing active chat")
             setTyping(false)
         } else {
-            Log.i(TAG, "Setting active chat ${pk.fingerprint()}")
+            Log.i(TAG, "Setting active chat ${pk.fingerprint()} (full key: '${pk.string()}')")
         }
 
         publicKey = pk
@@ -215,6 +217,10 @@ class ChatViewModel @Inject constructor(
 
     fun setDraft(draft: String) = contactManager.setDraft(publicKey, draft)
     fun clearDraft() = setDraft("")
+    fun setChatBackgroundUri(pk: PublicKey, uri: String) {
+        Log.d(TAG, "setChatBackgroundUri called with explicit key='${pk.fingerprint()}', uri='$uri'")
+        contactManager.setChatBackgroundUri(pk, uri)
+    }
 
     fun onEndCall() {
         callManager.endCall(publicKey)
